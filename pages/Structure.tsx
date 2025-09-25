@@ -51,7 +51,8 @@ export default function Estrutura() {
     setIsLoading(false);
   };
 
-  const handleSetorSubmit = async (setorData: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
+  // FIX: Removed unnecessary async keyword as context functions are synchronous.
+  const handleSetorSubmit = (setorData: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
     try {
       if (editingSetor) {
         updateSector(editingSetor.id, setorData);
@@ -66,7 +67,8 @@ export default function Estrutura() {
     }
   };
 
-  const handleSecaoSubmit = async (secaoData: Omit<Section, 'id' | 'ativo'>) => {
+  // FIX: Removed unnecessary async keyword as context functions are synchronous.
+  const handleSecaoSubmit = (secaoData: Omit<Section, 'id' | 'ativo'>) => {
     try {
       if (editingSecao) {
         updateSection(editingSecao.id, secaoData);
@@ -81,7 +83,8 @@ export default function Estrutura() {
     }
   };
 
-  const handleSetorDelete = async (setorId: string) => {
+  // FIX: Removed unnecessary async keyword as context functions are synchronous.
+  const handleSetorDelete = (setorId: string) => {
     const secoesDoSetor = secoes.filter(s => s.setor_id === setorId && s.ativo);
     
     if (secoesDoSetor.length > 0) {
@@ -98,7 +101,8 @@ export default function Estrutura() {
     }
   };
 
-  const handleSecaoDelete = async (secaoId: string) => {
+  // FIX: Removed unnecessary async keyword as context functions are synchronous.
+  const handleSecaoDelete = (secaoId: string) => {
     if (window.confirm("Tem certeza que deseja excluir esta seção?")) {
       try {
         updateSection(secaoId, { ativo: false });
