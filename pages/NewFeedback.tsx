@@ -31,7 +31,8 @@ const NewFeedback: React.FC = () => {
 
     // FIX: Explicitly type accumulator and value in reduce to prevent type inference issues.
     const totalScore = Object.values(activityRatings).reduce((acc: number, rating: number) => acc + rating, 0) / (Object.keys(activityRatings).length || 1)
-        + selectedOccurrences.reduce((acc, o) => acc + o.impact, 0);
+        // FIX: Explicitly typed the accumulator 'acc' to 'number' to resolve the arithmetic operation error.
+        + selectedOccurrences.reduce((acc: number, o) => acc + o.impact, 0);
 
     const finalScore = Math.max(0, Math.min(10, totalScore)).toFixed(1);
 
@@ -190,7 +191,8 @@ const NewFeedback: React.FC = () => {
                                 <h4 className="font-bold mb-2">Detalhes:</h4>
                                 {/* FIX: Explicitly type accumulator and value in reduce to prevent type inference issues. */}
                                 <div className="flex justify-between"><span>Atividades ({selectedActivities.length})</span> <span>{ (Object.values(activityRatings).reduce((a: number, b: number) => a + b, 0) / (Object.keys(activityRatings).length || 1)).toFixed(1) }/10</span></div>
-                                <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{selectedOccurrences.reduce((a,o) => a+o.impact, 0)}</span></div>
+                                {/* FIX: Explicitly typed the accumulator 'a' to 'number' to resolve the arithmetic operation error. */}
+                                <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{selectedOccurrences.reduce((a: number, o) => a+o.impact, 0)}</span></div>
                                 {selectedOccurrences.map(o => (
                                      <div key={o.id} className="flex justify-between pl-4 text-brand-text-light"><span>• {o.name}</span> <span>{o.impact > 0 ? '+' : ''}{o.impact}</span></div>
                                 ))}

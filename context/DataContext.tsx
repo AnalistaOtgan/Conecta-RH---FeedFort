@@ -1,6 +1,48 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section } from '../types';
 
+// A safe storage wrapper that checks for localStorage availability once.
+const createSafeStorage = (): Storage => {
+  // In-memory storage fallback
+  const inMemoryStore: { [key: string]: string } = {};
+  const inMemoryStorage: Storage = {
+    getItem: (key: string) => inMemoryStore[key] ?? null,
+    setItem: (key: string, value: string) => {
+      inMemoryStore[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete inMemoryStore[key];
+    },
+    clear: () => {
+      for (const key in inMemoryStore) {
+        delete inMemoryStore[key];
+      }
+    },
+    key: (index: number) => Object.keys(inMemoryStore)[index] ?? null,
+    get length() {
+      return Object.keys(inMemoryStore).length;
+    },
+  };
+
+  try {
+    // We need to check for existence and then perform a test operation.
+    // The entire block is in a try-catch to handle SecurityError.
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const testKey = '__test_storage_';
+      window.localStorage.setItem(testKey, testKey);
+      window.localStorage.removeItem(testKey);
+      return window.localStorage;
+    }
+  } catch (e) {
+    console.warn("localStorage is not available, falling back to in-memory storage. Data will not be persisted across page loads.", e);
+  }
+  
+  // If the try block failed or localStorage is not available, return the in-memory fallback.
+  return inMemoryStorage;
+};
+
+const safeStorage = createSafeStorage();
+
 // Mock Data (as initial data if localStorage is empty)
 const initialEmployees: Employee[] = [
   { id: '1', name: 'FERNANDA SILVA DOS SANTOS', role: 'Operador de Caixa', sector: 'Frente de Loja', shift: 'Fechamento', status: 'Ativo', initials: 'FE' },
@@ -43,15 +85,15 @@ const initialSections: Section[] = [
 
 const getInitialState = <T,>(key: string, defaultValue: T): T => {
     try {
-        const storedValue = localStorage.getItem(key);
+        const storedValue = safeStorage.getItem(key);
         if (storedValue) {
             return JSON.parse(storedValue);
         }
     } catch (error) {
-        console.error(`Error reading ${key} from localStorage`, error);
-        localStorage.removeItem(key);
+        console.error(`Error reading ${key} from safeStorage`, error);
+        safeStorage.removeItem(key);
     }
-    localStorage.setItem(key, JSON.stringify(defaultValue));
+    safeStorage.setItem(key, JSON.stringify(defaultValue));
     return defaultValue;
 };
 
@@ -78,11 +120,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [sectors, setSectors] = useState<Sector[]>(() => getInitialState('sectors', initialSectors));
   const [sections, setSections] = useState<Section[]>(() => getInitialState('sections', initialSections));
 
-  useEffect(() => { localStorage.setItem('employees', JSON.stringify(employees)); }, [employees]);
-  useEffect(() => { localStorage.setItem('activities', JSON.stringify(activities)); }, [activities]);
-  useEffect(() => { localStorage.setItem('occurrences', JSON.stringify(occurrences)); }, [occurrences]);
-  useEffect(() => { localStorage.setItem('sectors', JSON.stringify(sectors)); }, [sectors]);
-  useEffect(() => { localStorage.setItem('sections', JSON.stringify(sections)); }, [sections]);
+  useEffect(() => { safeStorage.setItem('employees', JSON.stringify(employees)); }, [employees]);
+  useEffect(() => { safeStorage.setItem('activities', JSON.stringify(activities)); }, [activities]);
+  useEffect(() => { safeStorage.setItem('occurrences', JSON.stringify(occurrences)); }, [occurrences]);
+  useEffect(() => { safeStorage.setItem('sectors', JSON.stringify(sectors)); }, [sectors]);
+  useEffect(() => { safeStorage.setItem('sections', JSON.stringify(sections)); }, [sections]);
 
   const addEmployee = (employee: Omit<Employee, 'id' | 'initials'>) => {
     const newId = `emp_${Date.now()}`;

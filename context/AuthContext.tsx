@@ -10,30 +10,42 @@ const mockUsers: { [key: string]: User } = {
 
 // A safe storage wrapper that checks for localStorage availability once.
 const createSafeStorage = (): Storage => {
-  const mockStorage: Storage = {
-    getItem: () => null,
-    setItem: () => {},
-    removeItem: () => {},
-    clear: () => {},
-    key: () => null,
-    length: 0,
+  // In-memory storage fallback
+  const inMemoryStore: { [key: string]: string } = {};
+  const inMemoryStorage: Storage = {
+    getItem: (key: string) => inMemoryStore[key] ?? null,
+    setItem: (key: string, value: string) => {
+      inMemoryStore[key] = value;
+    },
+    removeItem: (key: string) => {
+      delete inMemoryStore[key];
+    },
+    clear: () => {
+      for (const key in inMemoryStore) {
+        delete inMemoryStore[key];
+      }
+    },
+    key: (index: number) => Object.keys(inMemoryStore)[index] ?? null,
+    get length() {
+      return Object.keys(inMemoryStore).length;
+    },
   };
 
   try {
     // We need to check for existence and then perform a test operation.
     // The entire block is in a try-catch to handle SecurityError.
-    if (window.localStorage) {
+    if (typeof window !== 'undefined' && window.localStorage) {
       const testKey = '__test_storage_';
       window.localStorage.setItem(testKey, testKey);
       window.localStorage.removeItem(testKey);
       return window.localStorage;
     }
   } catch (e) {
-    console.warn("localStorage is not available, falling back to in-memory storage. User session will not be persisted.", e);
+    console.warn("localStorage is not available, falling back to in-memory storage. User session will not be persisted across page loads.", e);
   }
   
-  // If the try block failed or localStorage is not available, return the mock.
-  return mockStorage;
+  // If the try block failed or localStorage is not available, return the in-memory fallback.
+  return inMemoryStorage;
 };
 
 
@@ -81,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for user in storage on initial load
     const userFromStorage = getStoredUser();
     if (userFromStorage) {
+      // FIX: Corrected typo from userFromstorage to userFromStorage.
       setUser(userFromStorage);
     }
     setLoading(false); // Stop loading once user is checked
