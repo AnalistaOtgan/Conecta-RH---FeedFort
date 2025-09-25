@@ -77,7 +77,8 @@ const Configuration: React.FC = () => {
 
   const handleNewOccurrenceChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
-      setNewOccurrence(prev => ({ ...prev, [name]: name === 'impact' ? parseInt(value) : value }));
+      // FIX: Use parseFloat instead of parseInt to handle decimal values for impact.
+      setNewOccurrence(prev => ({ ...prev, [name]: name === 'impact' ? parseFloat(value) : value }));
   };
   
   const handleAddActivity = () => {
@@ -170,7 +171,7 @@ const Configuration: React.FC = () => {
                 </select>
                  <div>
                     <label className="block text-sm font-medium text-gray-700">Impacto na Pontuação: {newOccurrence.impact}</label>
-                    <input type="range" name="impact" min="-5" max="5" value={newOccurrence.impact} onChange={handleNewOccurrenceChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" name="impact" min="-5" max="5" step="0.5" value={newOccurrence.impact} onChange={handleNewOccurrenceChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
                 </div>
                  <div className="flex justify-end space-x-2 pt-4">
                     <button onClick={() => setOccurrenceModalOpen(false)} className="px-4 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>

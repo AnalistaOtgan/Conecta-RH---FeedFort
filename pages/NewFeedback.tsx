@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import { useData } from '../context/DataContext';
@@ -153,8 +154,7 @@ const NewFeedback: React.FC = () => {
                     <Card className="!p-4">
                         <h3 className="font-bold text-lg mb-4 px-2">Ocorrências</h3>
                         <div className="space-y-4">
-                            {/* FIX: Explicitly type the destructured array from Object.entries to ensure 'occs' is recognized as an array. */}
-                            {Object.entries(groupedOccurrences).map(([group, occs]: [string, Occurrence[]]) => (
+                            {Object.entries(groupedOccurrences).map(([group, occs]) => (
                                 <div key={group}>
                                     <h4 className="font-semibold text-brand-text-light mb-2 flex items-center">{getOccurrenceIcon(occs[0].category)}<span className="ml-2">{group}</span></h4>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -191,7 +191,6 @@ const NewFeedback: React.FC = () => {
                             </div>
                             <div className="space-y-2 text-sm border-t pt-4">
                                 <h4 className="font-bold mb-2">Detalhes:</h4>
-                                {/* FIX: Replaced inline calculations with pre-calculated variables for clarity and to fix type errors. */}
                                 <div className="flex justify-between"><span>Atividades ({selectedActivities.length})</span> <span>{averageActivityScore.toFixed(1)}/10</span></div>
                                 <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{occurrenceImpact}</span></div>
                                 {selectedOccurrences.map(o => (

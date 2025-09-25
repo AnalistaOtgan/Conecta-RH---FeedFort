@@ -1,187 +1,129 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, LoggedOccurrence, User } from '../types';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, User } from '../types';
 
-const initialUsers: User[] = [
-    { id: 'user_ldr_1', name: 'Ana Costa', role: 'Líder de Loja', avatar: 'AC', managedSectorIds: ['s1'] }, // Frente de Loja
-    { id: 'user_ldr_2', name: 'João Mendes', role: 'Líder de Loja', avatar: 'JM', managedSectorIds: ['s2', 's3'] }, // Mercearia & Açougue
-    { id: 'user_rh_1', name: 'Admin RH', role: 'RH', avatar: 'RH' },
-    { id: 'user_dir_1', name: 'Diretor', role: 'Diretor', avatar: 'D' },
+// Mock Data
+const sectorsData: Sector[] = [
+    { id: 'sec1', name: 'Mercearia', description: 'Setor de produtos secos e embalados.', sections: 2 },
+    { id: 'sec2', name: 'Hortifruti', description: 'Setor de frutas, verduras e legumes.', sections: 1 },
+    { id: 'sec3', name: 'Açougue', description: 'Setor de carnes.', sections: 1 },
 ];
 
-// Mock Data (as initial data if localStorage is empty)
-const initialEmployees: Employee[] = [
-  { id: '1', name: 'FERNANDA SILVA DOS SANTOS', role: 'Operador de Caixa', sector: 'Frente de Loja', shift: 'Fechamento', status: 'Ativo', initials: 'FE', admissionDate: '2023-01-15', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
-  { id: '2', name: 'BRENDON SOUSA DE OLIVEIRA', role: 'Repositor', sector: 'Mercearia', shift: 'Abertura', status: 'Ativo', initials: 'BR', admissionDate: '2022-11-20', leaderId: 'user_ldr_2', leaderName: 'João Mendes' },
-  { id: '3', name: 'CARLOS ALBERTO PEREIRA', role: 'Açougueiro', sector: 'Açougue', shift: 'Intermediário', status: 'Ativo', initials: 'CA', admissionDate: '2021-05-10', leaderId: 'user_ldr_2', leaderName: 'João Mendes' },
-  { id: '4', name: 'MARIA EDUARDA GONÇALVES', role: 'Padeiro', sector: 'Padaria', shift: 'Abertura', status: 'Ativo', initials: 'ME', admissionDate: '2023-03-01', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
+const sectionsData: Section[] = [
+    { id: 'sct1', name: 'Corredor 1', sector: 'Mercearia', description: 'Massas e molhos' },
+    { id: 'sct2', name: 'Corredor 2', sector: 'Mercearia', description: 'Enlatados e conservas' },
+    { id: 'sct3', name: 'Bancada de Folhas', sector: 'Hortifruti', description: 'Verduras e legumes frescos' },
+    { id: 'sct4', name: 'Balcão de Atendimento', sector: 'Açougue', description: 'Cortes de carne bovina e suína' },
 ];
 
-const initialActivities: Activity[] = [
-  { id: 'a1', name: 'Abordagem ao Cliente', description: 'Recepcionar clientes com cordialidade e eficiência.', weight: 8, attribute: 'comunicacao' },
-  { id: 'a2', name: 'Organização do Setor', description: 'Manter o setor limpo, organizado e abastecido.', weight: 7, attribute: 'organizacao' },
-  { id: 'a3', name: 'Trabalho em Equipe', description: 'Colaborar com colegas para atingir metas.', weight: 6, attribute: 'trabalho equipe' },
-  { id: 'a4', name: 'Proatividade e Iniciativa', description: 'Identificar e resolver problemas de forma autônoma.', weight: 9, attribute: 'iniciativa' },
+const employeesData: Employee[] = [
+    { id: 'user_ldr_1', name: 'Ana Costa', role: 'Líder de Loja', sector: 'Gerência', shift: 'Integral', status: 'Ativo', initials: 'AC', admissionDate: '2022-01-15' },
+    { id: 'emp2', name: 'Bruno Lima', role: 'Operador de Caixa', sector: 'Frente de Loja', shift: 'Tarde', status: 'Ativo', initials: 'BL', admissionDate: '2022-05-20', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
+    { id: 'emp3', name: 'Carla Dias', role: 'Repositor', sector: 'Mercearia', shift: 'Manhã', status: 'Ativo', initials: 'CD', admissionDate: '2023-02-10', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
+    { id: 'emp4', name: 'Daniel Souza', role: 'Açougueiro', sector: 'Açougue', shift: 'Integral', status: 'Ativo', initials: 'DS', admissionDate: '2021-11-05', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
+    { id: 'emp5', name: 'Eduarda Martins', role: 'Repositor', sector: 'Hortifruti', shift: 'Tarde', status: 'Inativo', initials: 'EM', admissionDate: '2022-08-01', terminationDate: '2024-01-20', leaderId: 'user_ldr_1', leaderName: 'Ana Costa' },
 ];
 
-const initialOccurrences: Occurrence[] = [
-    { id: 'o1', name: 'Elogio de Cliente', description: 'Cliente elogiou o atendimento prestado.', category: OccurrenceCategory.DesempenhoExcepcional, impact: 2 },
-    { id: 'o2', name: 'Meta de Vendas Atingida', description: 'Colaborador atingiu a meta individual de vendas.', category: OccurrenceCategory.Positivo, impact: 1 },
-    { id: 'o3', name: 'Atraso Injustificado', description: 'Chegou atrasado sem comunicação prévia.', category: OccurrenceCategory.PrecisaMelhorar, impact: -1 },
-    { id: 'o4', name: 'Uso de Celular', description: 'Utilizando o celular em horário de trabalho fora das pausas.', category: OccurrenceCategory.ViolacaoPolitica, impact: -2 },
+const activitiesData: Activity[] = [
+    { id: 'act1', name: 'Atendimento ao Cliente', description: 'Cortesia e eficiência no atendimento.', weight: 8, attribute: 'Comunicação' },
+    { id: 'act2', name: 'Organização da Gôndola', description: 'Manter produtos alinhados e precificados.', weight: 6, attribute: 'Organização' },
+    { id: 'act3', name: 'Proatividade na Resolução', description: 'Iniciativa para resolver problemas.', weight: 7, attribute: 'Iniciativa' },
+    { id: 'act4', name: 'Trabalho em Equipe', description: 'Colaboração com colegas de setor.', weight: 5, attribute: 'Trabalho em Equipe' },
 ];
 
-const initialDetailedFeedbacks: DetailedFeedback[] = [
-    { 
-        id: 'f1', employeeId: '1', authorName: 'Ana Costa', date: '2025-09-22T02:49:00Z', finalScore: 10,
-        qualitative: 'Fernanda demonstrou excelente habilidade de comunicação e proatividade ao resolver um problema com um cliente. Manteve a calma e encontrou uma solução que deixou o cliente satisfeito.',
-        activities: [ { id: 'a1', name: 'Abordagem ao Cliente', rating: 10, weight: 8 }, { id: 'a4', name: 'Proatividade e Iniciativa', rating: 9, weight: 9 } ],
-        occurrences: [ { id: 'o1', name: 'Elogio de Cliente', impact: 2 } ]
-    },
-    { 
-        id: 'f2', employeeId: '2', authorName: 'João Mendes', date: '2025-09-22T02:52:00Z', finalScore: 0,
-        qualitative: 'Brendon precisa melhorar a atenção aos detalhes na organização do setor. Foram encontrados produtos fora do lugar em sua área de responsabilidade. Ocorrência de atraso também impactou negativamente.',
-        activities: [ { id: 'a2', name: 'Organização do Setor', rating: 3, weight: 7 } ],
-        occurrences: [ { id: 'o3', name: 'Atraso Injustificado', impact: -1 } ]
-    },
-    { 
-        id: 'f3', employeeId: '1', authorName: 'Ana Costa', date: '2025-08-15T10:00:00Z', finalScore: 8.5,
-        qualitative: 'Desempenho muito bom no trabalho em equipe durante o período de alta demanda. Ajudou colegas de outros setores sem que fosse solicitado.',
-        activities: [ { id: 'a3', name: 'Trabalho em Equipe', rating: 9, weight: 6 } ],
-        occurrences: []
-    }
+const occurrencesData: Occurrence[] = [
+    { id: 'occ1', name: 'Elogio de Cliente', description: 'Cliente elogiou o atendimento proativo.', category: OccurrenceCategory.DesempenhoExcepcional, impact: 1.5 },
+    { id: 'occ2', name: 'Atraso Injustificado', description: 'Chegou 20 minutos atrasado sem aviso.', category: OccurrenceCategory.ViolacaoPolitica, impact: -1.0 },
+    { id: 'occ3', name: 'Ajuda a Colega', description: 'Ajudou colega de outro setor a organizar.', category: OccurrenceCategory.Positivo, impact: 0.5 },
+    { id: 'occ4', name: 'Gôndola Desorganizada', description: 'Deixou seção desorganizada no fim do turno.', category: OccurrenceCategory.PrecisaMelhorar, impact: -0.5 },
 ];
 
-const initialLoggedOccurrences: LoggedOccurrence[] = [
-    { id: 'lo1', employeeId: '2', occurrenceId: 'o3', name: 'Atraso Injustificado', category: OccurrenceCategory.PrecisaMelhorar, date: '2025-09-21T08:10:00Z', authorName: 'João Mendes', notes: 'Chegou 10 minutos atrasado.' },
-    { id: 'lo2', employeeId: '1', occurrenceId: 'o1', name: 'Elogio de Cliente', category: OccurrenceCategory.DesempenhoExcepcional, date: '2025-09-22T14:30:00Z', authorName: 'Ana Costa', notes: 'Cliente Sra. Marta ligou para elogiar a paciência e cordialidade da funcionária.' },
-    { id: 'lo3', employeeId: '3', occurrenceId: 'o2', name: 'Meta de Vendas Atingida', category: OccurrenceCategory.Positivo, date: '2025-08-30T18:00:00Z', authorName: 'João Mendes', notes: 'Atingiu 110% da meta de vendas de carnes nobres.' },
-    { id: 'lo4', employeeId: '4', occurrenceId: 'o4', name: 'Uso de Celular', category: OccurrenceCategory.ViolacaoPolitica, date: '2025-09-19T11:00:00Z', authorName: 'Admin RH', notes: 'Observado utilizando redes sociais no celular durante o horário de produção.' }
+const feedbacksData: DetailedFeedback[] = [
+    { id: 'fb1', employeeId: 'emp2', authorName: 'Ana Costa', date: '2024-07-20T10:00:00Z', finalScore: 8.5, qualitative: 'Bruno demonstrou excelente atendimento ao cliente.', activities: [{ id: 'act1', name: 'Atendimento ao Cliente', rating: 9, weight: 8 }], occurrences: [{ id: 'occ1', name: 'Elogio de Cliente', impact: 1.5 }] },
+    { id: 'fb2', employeeId: 'emp3', authorName: 'Ana Costa', date: '2024-07-19T15:30:00Z', finalScore: 6.5, qualitative: 'Carla precisa melhorar a organização.', activities: [{ id: 'act2', name: 'Organização da Gôndola', rating: 6, weight: 6 }], occurrences: [{ id: 'occ4', name: 'Gôndola Desorganizada', impact: -0.5 }] },
+    { id: 'fb3', employeeId: 'emp4', authorName: 'Ana Costa', date: '2024-07-21T09:00:00Z', finalScore: 9.0, qualitative: 'Daniel é muito proativo e colaborativo.', activities: [{ id: 'act3', name: 'Proatividade na Resolução', rating: 9, weight: 7 }, { id: 'act4', name: 'Trabalho em Equipe', rating: 9, weight: 5 }], occurrences: [] },
+    { id: 'fb4', employeeId: 'emp2', authorName: 'Ana Costa', date: '2024-06-15T10:00:00Z', finalScore: 7.0, qualitative: 'Bom desempenho geral.', activities: [{ id: 'act1', name: 'Atendimento ao Cliente', rating: 7, weight: 8 }], occurrences: [] },
 ];
-
-
-const initialSectors: Sector[] = [
-    { id: 's1', name: 'Frente de Loja', description: 'Operação de caixas e atendimento ao cliente.', sections: 2 },
-    { id: 's2', name: 'Mercearia', description: 'Reposição e organização de produtos.', sections: 3 },
-    { id: 's3', name: 'Açougue', description: 'Corte e venda de carnes.', sections: 1 },
-    { id: 's4', name: 'Padaria', description: 'Produção e venda de pães e confeitaria.', sections: 1 },
-];
-
-const initialSections: Section[] = [
-    { id: 'sec1', name: 'Caixas Rápidos', sector: 'Frente de Loja', description: 'Atendimento para poucos volumes.' },
-    { id: 'sec2', name: 'Caixas Preferenciais', sector: 'Frente de Loja', description: 'Atendimento prioritário.' },
-    { id: 'sec3', name: 'Corredor 1-5', sector: 'Mercearia', description: 'Produtos de alimentação básica.' },
-    { id: 'sec4', name: 'Corredor 6-10', sector: 'Mercearia', description: 'Bebidas e enlatados.' },
-    { id: 'sec5', name: 'Corredor 11-15', sector: 'Mercearia', description: 'Limpeza e higiene.' },
-    { id: 'sec6', name: 'Balcão de Atendimento', sector: 'Açougue', description: 'Atendimento direto ao cliente.' },
-    { id: 'sec7', name: 'Produção', sector: 'Padaria', description: 'Área de fabricação de produtos.' },
-];
-
-
-const getInitialState = <T,>(key: string, defaultValue: T): T => {
-    try {
-        const storedValue = localStorage.getItem(key);
-        if (storedValue) {
-            return JSON.parse(storedValue);
-        }
-    } catch (error) {
-        console.error(`Error reading ${key} from localStorage`, error);
-        localStorage.removeItem(key);
-    }
-    localStorage.setItem(key, JSON.stringify(defaultValue));
-    return defaultValue;
-};
-
 
 interface DataContextType {
-  employees: Employee[];
-  activities: Activity[];
-  occurrences: Occurrence[];
-  sectors: Sector[];
-  sections: Section[];
-  feedbacks: DetailedFeedback[];
-  loggedOccurrences: LoggedOccurrence[];
-  users: User[];
-  addEmployee: (employee: Omit<Employee, 'id' | 'initials' | 'admissionDate'>) => void;
-  addActivity: (activity: Omit<Activity, 'id'>) => void;
-  addOccurrence: (occurrence: Omit<Occurrence, 'id'>) => void;
-  addSector: (sector: Omit<Sector, 'id' | 'sections'>) => void;
-  addSection: (section: Omit<Section, 'id'>) => void;
-  addLoggedOccurrence: (occurrenceData: Omit<LoggedOccurrence, 'id' | 'name' | 'category'>) => void;
+    user: User | null;
+    employees: Employee[];
+    activities: Activity[];
+    occurrences: Occurrence[];
+    sectors: Sector[];
+    sections: Section[];
+    feedbacks: DetailedFeedback[];
+    addSector: (sector: Omit<Sector, 'id' | 'sections'>) => void;
+    addSection: (section: Omit<Section, 'id'>) => void;
+    addActivity: (activity: Omit<Activity, 'id'>) => void;
+    addOccurrence: (occurrence: Omit<Occurrence, 'id'>) => void;
+    addEmployee: (employee: Omit<Employee, 'id' | 'status' | 'initials' | 'terminationDate' | 'leaderId' | 'leaderName'>) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [employees, setEmployees] = useState<Employee[]>(() => getInitialState('employees', initialEmployees));
-  const [activities, setActivities] = useState<Activity[]>(() => getInitialState('activities', initialActivities));
-  const [occurrences, setOccurrences] = useState<Occurrence[]>(() => getInitialState('occurrences', initialOccurrences));
-  const [sectors, setSectors] = useState<Sector[]>(() => getInitialState('sectors', initialSectors));
-  const [sections, setSections] = useState<Section[]>(() => getInitialState('sections', initialSections));
-  const [feedbacks, setFeedbacks] = useState<DetailedFeedback[]>(() => getInitialState('feedbacks', initialDetailedFeedbacks));
-  const [loggedOccurrences, setLoggedOccurrences] = useState<LoggedOccurrence[]>(() => getInitialState('loggedOccurrences', initialLoggedOccurrences));
-  const [users, setUsers] = useState<User[]>(() => getInitialState('users', initialUsers));
+    const [employees, setEmployees] = useState<Employee[]>(employeesData);
+    const [activities, setActivities] = useState<Activity[]>(activitiesData);
+    const [occurrences, setOccurrences] = useState<Occurrence[]>(occurrencesData);
+    const [sectors, setSectors] = useState<Sector[]>(sectorsData);
+    const [sections, setSections] = useState<Section[]>(sectionsData);
+    const [feedbacks, setFeedbacks] = useState<DetailedFeedback[]>(feedbacksData);
 
-  useEffect(() => { localStorage.setItem('employees', JSON.stringify(employees)); }, [employees]);
-  useEffect(() => { localStorage.setItem('activities', JSON.stringify(activities)); }, [activities]);
-  useEffect(() => { localStorage.setItem('occurrences', JSON.stringify(occurrences)); }, [occurrences]);
-  useEffect(() => { localStorage.setItem('sectors', JSON.stringify(sectors)); }, [sectors]);
-  useEffect(() => { localStorage.setItem('sections', JSON.stringify(sections)); }, [sections]);
-  useEffect(() => { localStorage.setItem('feedbacks', JSON.stringify(feedbacks)); }, [feedbacks]);
-  useEffect(() => { localStorage.setItem('loggedOccurrences', JSON.stringify(loggedOccurrences)); }, [loggedOccurrences]);
-  useEffect(() => { localStorage.setItem('users', JSON.stringify(users)); }, [users]);
-
-
-  const addEmployee = (employee: Omit<Employee, 'id' | 'initials' | 'admissionDate'>) => {
-    const newId = `emp_${Date.now()}`;
-    const initials = (employee.name.split(' ').map(n => n[0]).slice(0, 2).join('') || '').toUpperCase();
-    const admissionDate = new Date().toISOString().split('T')[0];
-    const newEmployee: Employee = { ...employee, id: newId, initials, admissionDate };
-    setEmployees(prev => [...prev, newEmployee]);
-  };
-
-  const addActivity = (activity: Omit<Activity, 'id'>) => {
-    const newActivity: Activity = { ...activity, id: `act_${Date.now()}` };
-    setActivities(prev => [...prev, newActivity]);
-  };
-
-  const addOccurrence = (occurrence: Omit<Occurrence, 'id'>) => {
-    const newOccurrence: Occurrence = { ...occurrence, id: `occ_${Date.now()}` };
-    setOccurrences(prev => [...prev, newOccurrence]);
-  };
-  
-  const addLoggedOccurrence = (occurrenceData: Omit<LoggedOccurrence, 'id' | 'name' | 'category'>) => {
-    const baseOccurrence = occurrences.find(o => o.id === occurrenceData.occurrenceId);
-    if (!baseOccurrence) return;
-
-    const newLoggedOccurrence: LoggedOccurrence = {
-        ...occurrenceData,
-        id: `locc_${Date.now()}`,
-        name: baseOccurrence.name,
-        category: baseOccurrence.category,
+    const addSector = (sector: Omit<Sector, 'id' | 'sections'>) => {
+        const newSector: Sector = { ...sector, id: `sec${Date.now()}`, sections: 0 };
+        setSectors(prev => [...prev, newSector]);
     };
-    setLoggedOccurrences(prev => [newLoggedOccurrence, ...prev]);
-  };
 
-  const addSector = (sector: Omit<Sector, 'id' | 'sections'>) => {
-    const newSector: Sector = { ...sector, id: `sec_${Date.now()}`, sections: 0 };
-    setSectors(prev => [...prev, newSector]);
-  };
+    const addSection = (section: Omit<Section, 'id'>) => {
+        const newSection: Section = { ...section, id: `sct${Date.now()}` };
+        setSections(prev => [...prev, newSection]);
+        setSectors(prevSectors => prevSectors.map(s => s.name === newSection.sector ? { ...s, sections: s.sections + 1 } : s));
+    };
+    
+    const addActivity = (activity: Omit<Activity, 'id'>) => {
+        const newActivity: Activity = { ...activity, id: `act${Date.now()}` };
+        setActivities(prev => [...prev, newActivity]);
+    };
+    
+    const addOccurrence = (occurrence: Omit<Occurrence, 'id'>) => {
+        const newOccurrence: Occurrence = { ...occurrence, id: `occ${Date.now()}` };
+        setOccurrences(prev => [...prev, newOccurrence]);
+    };
 
-  const addSection = (section: Omit<Section, 'id'>) => {
-    const newSection: Section = { ...section, id: `sct_${Date.now()}` };
-    setSections(prev => [...prev, newSection]);
-    setSectors(prev => prev.map(s => s.name === section.sector ? {...s, sections: s.sections + 1} : s));
-  };
+    // FIX: Add `addEmployee` function to context to allow creating new employees.
+    const addEmployee = (employee: Omit<Employee, 'id' | 'status' | 'initials' | 'terminationDate' | 'leaderId' | 'leaderName'>) => {
+        const initials = employee.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+        const newEmployee: Employee = {
+            ...employee,
+            id: `emp${Date.now()}`,
+            status: 'Ativo',
+            initials,
+        };
+        setEmployees(prev => [...prev, newEmployee]);
+    };
 
-  const value = { employees, activities, occurrences, sectors, sections, feedbacks, loggedOccurrences, users, addEmployee, addActivity, addOccurrence, addSector, addSection, addLoggedOccurrence };
+    const value = {
+        user: null, // This would come from AuthContext in a real app
+        employees,
+        activities,
+        occurrences,
+        sectors,
+        sections,
+        feedbacks,
+        addSector,
+        addSection,
+        addActivity,
+        addOccurrence,
+        addEmployee,
+    };
 
-  return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
+    return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 };
 
 export const useData = () => {
-  const context = useContext(DataContext);
-  if (context === undefined) {
-    throw new Error('useData must be used within a DataProvider');
-  }
-  return context;
+    const context = useContext(DataContext);
+    if (context === undefined) {
+        throw new Error('useData must be used within a DataProvider');
+    }
+    return context;
 };
