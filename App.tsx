@@ -24,11 +24,11 @@ const AppRoutes: React.FC = () => {
             <Route element={<ProtectedRoute />}>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/feedback" element={<NewFeedback />} />
-                <Route path="/reports" element={<Reports />} />
-                <Route path="/employees" element={<Employees />} />
-                <Route path="/employees/:employeeId" element={<EmployeeDossier />} />
                 {hasAdminAccess && (
                     <>
+                        <Route path="/reports" element={<Reports />} />
+                        <Route path="/employees" element={<Employees />} />
+                        <Route path="/employees/:employeeId" element={<EmployeeDossier />} />
                         <Route path="/structure" element={<Structure />} />
                         <Route path="/configuration" element={<Configuration />} />
                     </>

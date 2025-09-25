@@ -47,13 +47,15 @@ export interface Sector {
     name: string;
     description: string;
     sections: number;
+    ativo: boolean;
 }
 
 export interface Section {
     id: string;
     name: string;
-    sector: string;
+    setor_id: string;
     description: string;
+    ativo: boolean;
 }
 
 export interface DetailedFeedback {
@@ -65,4 +67,27 @@ export interface DetailedFeedback {
     qualitative: string;
     activities: { id: string; name: string; rating: number; weight: number }[];
     occurrences: { id: string; name: string; impact: number }[];
+}
+
+// Types for the New Feedback Form
+export interface ObservedActivity {
+  activityId: string;
+  rating: number;
+  observations: string;
+}
+
+export interface RegisteredOccurrence {
+  occurrenceId: string;
+  details: string;
+}
+
+export interface FeedbackData {
+  employeeId: string;
+  feedbackDate: string;
+  shift: string;
+  observedActivities: ObservedActivity[];
+  qualitativeFeedback: string;
+  occurrences: RegisteredOccurrence[];
+  finalScore: number;
+  authorId: string;
 }

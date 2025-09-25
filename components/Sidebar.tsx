@@ -20,8 +20,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
     const allNavItems = [
         { icon: DashboardIcon, label: 'Dashboard', path: '/', roles: ['Líder de Loja', 'RH', 'Diretor'] },
         { icon: PlusCircleIcon, label: 'Novo Feedback', path: '/feedback', roles: ['Líder de Loja', 'RH', 'Diretor'] },
-        { icon: FileTextIcon, label: 'Relatórios', path: '/reports', roles: ['Líder de Loja', 'RH', 'Diretor'] },
-        { icon: UsersIcon, label: 'Funcionários', path: '/employees', roles: ['Líder de Loja', 'RH', 'Diretor'] },
+        { icon: FileTextIcon, label: 'Relatórios', path: '/reports', roles: ['RH', 'Diretor'] },
+        { icon: UsersIcon, label: 'Funcionários', path: '/employees', roles: ['RH', 'Diretor'] },
         { icon: LayersIcon, label: 'Estrutura', path: '/structure', roles: ['RH', 'Diretor'] },
         { icon: SettingsIcon, label: 'Configurações', path: '/configuration', roles: ['RH', 'Diretor'] },
     ];

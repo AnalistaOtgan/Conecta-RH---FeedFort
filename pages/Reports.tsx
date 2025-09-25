@@ -1,168 +1,128 @@
 import React from 'react';
 import Card from '../components/Card';
 import { useData } from '../context/DataContext';
-import { useAuth } from '../context/AuthContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
-import { CalendarIcon, ChevronDownIcon, DownloadIcon, FilterIcon } from '../components/icons';
-import { DetailedFeedback, Employee } from '../types';
+import { ChevronDownIcon, DownloadIcon, FilterIcon, FileTextIcon } from '../components/icons';
 
 const Reports: React.FC = () => {
-    const { employees, feedbacks } = useData();
-    const { user } = useAuth();
+    const { employees, sectors } = useData();
+    const leaders = employees.filter(e => e.role.toLowerCase().includes('líder'));
 
-    // Filter data based on user role
-    let teamEmployees: Employee[] = employees;
-    let teamFeedbacks: DetailedFeedback[] = feedbacks;
-
-    if (user?.role === 'Líder de Loja') {
-        teamEmployees = employees.filter(e => e.leaderId === user.id);
-        const teamEmployeeIds = teamEmployees.map(e => e.id);
-        teamFeedbacks = feedbacks.filter(f => teamEmployeeIds.includes(f.employeeId));
-    }
-    
-    // Make table data dynamic
-    const recentFeedbacks = [...teamFeedbacks]
-        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .map(f => {
-            const employee = teamEmployees.find(e => e.id === f.employeeId);
-            return {
-                id: f.id,
-                employee: employee?.name || 'Desconhecido',
-                date: new Date(f.date).toLocaleDateString('pt-BR'),
-                score: f.finalScore,
-                sector: employee?.sector || 'N/A',
-                author: f.authorName
-            }
-        });
-        
-    // Calculate dynamic performance data
-    const performanceBySector = teamFeedbacks.reduce((acc, feedback) => {
-        const employee = teamEmployees.find(e => e.id === feedback.employeeId);
-        if (employee) {
-            const sectorName = employee.sector;
-            if (!acc[sectorName]) {
-                acc[sectorName] = { totalScore: 0, count: 0 };
-            }
-            acc[sectorName].totalScore += feedback.finalScore;
-            acc[sectorName].count++;
+    const reportTypes = [
+        {
+            title: 'Resumo de Performance',
+            description: 'Relatório consolidado com médias de performance por funcionário, setor e período.',
+        },
+        {
+            title: 'Frequência de Feedback',
+            description: 'Análise da frequência de feedback fornecido por líder e recebido por funcionário.',
+        },
+        {
+            title: 'Relatório de Ocorrências',
+            description: 'Detalha todas as ocorrências (positivas e negativas) registradas no período.',
+        },
+        {
+            title: 'Evolução de Atributos',
+            description: 'Mostra a evolução dos atributos de performance para um funcionário ou setor.',
+        },
+        {
+            title: 'Comparativo de Performance',
+            description: 'Compare a performance entre funcionários ou setores.',
+        },
+        {
+            title: 'Feedback Qualitativo',
+            description: 'Exporta todos os feedbacks qualitativos para análise de texto.',
         }
-        return acc;
-    }, {} as Record<string, { totalScore: number, count: number }>);
+    ];
 
-    const teamPerformanceData = Object.entries(performanceBySector).map(([name, data]) => ({
-        name,
-        media: data.count > 0 ? parseFloat((data.totalScore / data.count).toFixed(1)) : 0,
-    }));
-    
-    const averageScore = teamFeedbacks.length > 0 ? teamFeedbacks.reduce((acc, f) => acc + f.finalScore, 0) / teamFeedbacks.length : 0;
-    
-    const participationRate = teamEmployees.length > 0 
-        ? (new Set(teamFeedbacks.map(f => f.employeeId)).size / teamEmployees.length) * 100 
-        : 0;
+    return (
+        <div className="space-y-8">
+            <div>
+                <h2 className="text-2xl font-bold text-brand-text">Relatórios</h2>
+                <p className="text-brand-text-light">Gere e visualize relatórios detalhados de performance e feedback</p>
+            </div>
+          
+            <Card>
+                <div className="mb-4">
+                    <h3 className="text-xl font-semibold flex items-center text-brand-text">
+                        <FilterIcon className="w-6 h-6 mr-3 text-brand-blue"/> Filtros
+                    </h3>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Funcionário</label>
+                        <div className="relative">
+                            <select className="w-full p-2 border border-brand-gray rounded-lg bg-white appearance-none pr-8">
+                                <option>Todos os funcionários</option>
+                                {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                        </div>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Líder</label>
+                        <div className="relative">
+                            <select className="w-full p-2 border border-brand-gray rounded-lg bg-white appearance-none pr-8">
+                                <option>Todos os líderes</option>
+                                {leaders.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                        </div>
+                    </div>
+                     <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Setor</label>
+                        <div className="relative">
+                            <select className="w-full p-2 border border-brand-gray rounded-lg bg-white appearance-none pr-8">
+                                <option>Todos os setores</option>
+                                {sectors.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                        </div>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                        <div className="relative">
+                             <select className="w-full p-2 border border-brand-gray rounded-lg bg-white appearance-none pr-8">
+                                <option>Últimos 30 dias</option>
+                                <option>Este mês</option>
+                                <option>Mês passado</option>
+                                <option>Últimos 90 dias</option>
+                            </select>
+                            <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                        </div>
+                    </div>
+                </div>
+                <div className="flex justify-end mt-6">
+                    <button className="px-6 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue">
+                        Aplicar Filtros
+                    </button>
+                </div>
+            </Card>
 
-
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-            <h2 className="text-2xl font-bold text-brand-text">Relatórios de Desempenho</h2>
-            <p className="text-brand-text-light">Analise os dados de feedback da sua equipe</p>
-        </div>
-        <button className="bg-brand-blue hover:bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-lg flex items-center">
-            <DownloadIcon className="w-5 h-5 mr-2"/>
-            Exportar Relatório
-        </button>
-      </div>
-      
-      <Card>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-            <h3 className="text-lg font-semibold flex items-center"><FilterIcon className="w-5 h-5 mr-2"/> Filtros</h3>
-            <div className="flex flex-wrap items-center gap-4">
-                <div className="relative">
-                    <input type="text" placeholder="01/09/2025 - 30/09/2025" className="p-2 border rounded-md pr-10"/>
-                    <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                </div>
-                <div className="relative">
-                    <select className="p-2 border rounded-md bg-white appearance-none pr-8">
-                        <option>Todos os Setores</option>
-                    </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                </div>
-                <div className="relative">
-                    <select className="p-2 border rounded-md bg-white appearance-none pr-8">
-                        <option>Todos os Funcionários</option>
-                        {teamEmployees.map(e => <option key={e.id}>{e.name}</option>)}
-                    </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                </div>
-                 <button className="px-4 py-2 rounded-lg bg-gray-200 text-brand-text font-semibold hover:bg-gray-300">
-                    Aplicar
-                </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {reportTypes.map((report, index) => (
+                    <Card key={index} className="flex flex-col">
+                        <div className="flex items-start mb-4">
+                            <FileTextIcon className="w-8 h-8 mr-4 text-brand-blue flex-shrink-0" />
+                            <div>
+                                <h3 className="text-lg font-bold text-brand-text">{report.title}</h3>
+                                <p className="text-sm text-brand-text-light mt-1">{report.description}</p>
+                            </div>
+                        </div>
+                        <div className="mt-auto space-y-3 pt-4">
+                            <button className="w-full flex items-center justify-center px-4 py-2 border border-brand-gray rounded-lg text-brand-text font-semibold hover:bg-gray-50">
+                                <FileTextIcon className="w-5 h-5 mr-2" />
+                                Visualizar Relatório
+                            </button>
+                            <button className="w-full flex items-center justify-center px-4 py-2 border border-brand-gray rounded-lg text-brand-text font-semibold hover:bg-gray-50">
+                                <DownloadIcon className="w-5 h-5 mr-2" />
+                                Baixar PDF
+                            </button>
+                        </div>
+                    </Card>
+                ))}
             </div>
         </div>
-      </Card>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card>
-            <p className="text-sm text-brand-text-light">PONTUAÇÃO MÉDIA GERAL</p>
-            <p className="text-3xl font-bold">{averageScore.toFixed(1)}</p>
-          </Card>
-          <Card>
-            <p className="text-sm text-brand-text-light">TOTAL DE FEEDBACKS</p>
-            <p className="text-3xl font-bold">{recentFeedbacks.length}</p>
-          </Card>
-           <Card>
-            <p className="text-sm text-brand-text-light">TAXA DE PARTICIPAÇÃO</p>
-            <p className="text-3xl font-bold">{participationRate.toFixed(0)}%</p>
-            <p className="text-sm text-brand-text-light">Funcionários com feedback</p>
-          </Card>
-      </div>
-
-      <Card>
-        <h3 className="font-bold text-lg mb-4">Performance por Setor</h3>
-        <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={teamPerformanceData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar dataKey="media" fill="#3B82F6" name="Média de Pontuação" />
-            </BarChart>
-        </ResponsiveContainer>
-      </Card>
-
-       <Card>
-            <h3 className="font-bold text-lg mb-4">Últimos Feedbacks Registrados</h3>
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left text-gray-500">
-                    <thead className="text-xs text-gray-700 uppercase bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-6 py-3">Funcionário</th>
-                            <th scope="col" className="px-6 py-3">Data</th>
-                            <th scope="col" className="px-6 py-3">Setor</th>
-                            <th scope="col" className="px-6 py-3">Autor</th>
-                            <th scope="col" className="px-6 py-3 text-right">Pontuação</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {recentFeedbacks.map((fb) => (
-                            <tr key={fb.id} className="bg-white border-b hover:bg-gray-50">
-                                <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                    {fb.employee}
-                                </th>
-                                <td className="px-6 py-4">{fb.date}</td>
-                                <td className="px-6 py-4">{fb.sector}</td>
-                                <td className="px-6 py-4">{fb.author}</td>
-                                <td className="px-6 py-4 text-right font-bold">{fb.score.toFixed(1)}/10</td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-       </Card>
-    </div>
-  );
+    );
 };
 
 export default Reports;

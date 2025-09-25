@@ -1,183 +1,324 @@
-import React, { useState } from 'react';
-import Card from '../components/Card';
-import Modal from '../components/Modal';
+import React, { useState, useEffect } from "react";
 import { useData } from '../context/DataContext';
-import { PlusCircleIcon, BuildingIcon, EditIcon, TrashIcon } from '../components/icons';
-import { Sector, Section } from '../types';
+import { Sector, Section } from "../types";
+import SetorCard from "../components/estrutura/SetorCard";
+import SecaoCard from "../components/estrutura/SecaoCard";
+import SetorForm from "../components/estrutura/SetorForm";
+import SecaoForm from "../components/estrutura/SecaoForm";
+import EstruturaTree from "../components/estrutura/EstruturaTree";
+import { BuildingIcon, LayersIcon, PlusCircleIcon } from '../components/icons';
 
-const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode; }> = ({ active, onClick, children }) => (
-    <button onClick={onClick} className={`px-4 py-2 font-semibold rounded-md ${active ? 'bg-blue-100 text-brand-blue' : 'text-brand-text-light hover:bg-gray-100'}`}>
-        {children}
-    </button>
+const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
+  <div className={`bg-white rounded-xl border border-brand-gray shadow-sm ${className}`}>
+    {children}
+  </div>
 );
 
-const SectorCard: React.FC<{ sector: Sector }> = ({ sector }) => (
-    <Card className="!p-4">
-        <div className="flex justify-between items-start">
-            <div>
-                <h4 className="font-bold text-lg flex items-center"><BuildingIcon className="w-5 h-5 mr-2 text-brand-blue"/>{sector.name}</h4>
-                <p className="text-sm text-brand-text-light mt-1">{sector.description}</p>
-            </div>
-            <div className="flex space-x-1">
-                <button className="p-2 text-brand-text-light hover:text-brand-blue"><EditIcon className="w-4 h-4"/></button>
-                <button className="p-2 text-brand-text-light hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
-            </div>
-        </div>
-        <p className="text-sm mt-4 text-brand-text-light">{sector.sections} seções ativas</p>
-    </Card>
+const CardContent: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
+  <div className={`p-6 ${className}`}>
+    {children}
+  </div>
 );
 
-const SectionCard: React.FC<{ section: Section }> = ({ section }) => (
-    <Card className="!p-4">
-        <div className="flex justify-between items-start">
-            <div>
-                <h4 className="font-bold">{section.name}</h4>
-                <p className="text-sm text-brand-text-light mt-1">{section.description}</p>
-            </div>
-            <div className="flex space-x-1">
-                <button className="p-2 text-brand-text-light hover:text-brand-blue"><EditIcon className="w-4 h-4"/></button>
-                <button className="p-2 text-brand-text-light hover:text-red-500"><TrashIcon className="w-4 h-4"/></button>
-            </div>
-        </div>
-         <p className="text-xs mt-3 text-brand-text-light font-semibold bg-gray-100 px-2 py-1 rounded-full inline-block">Setor: {section.sector}</p>
-    </Card>
+const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & { children: React.ReactNode }> = ({ children, className, ...props }) => (
+  <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background ${className}`} {...props}>
+    {children}
+  </button>
 );
 
-const Structure: React.FC = () => {
-  const { sectors, sections, addSector, addSection } = useData();
-  const [activeTab, setActiveTab] = useState('Sectors');
-  const [isSectorModalOpen, setIsSectorModalOpen] = useState(false);
-  const [isSectionModalOpen, setIsSectionModalOpen] = useState(false);
+export default function Estrutura() {
+  const { sectors: allSectors, sections: allSections, addSector, updateSector, addSection, updateSection } = useData();
 
-  // State for new sector modal
-  const [newSectorName, setNewSectorName] = useState('');
-  const [newSectorDesc, setNewSectorDesc] = useState('');
-
-  // State for new section modal
-  const [newSectionName, setNewSectionName] = useState('');
-  const [newSectionDesc, setNewSectionDesc] = useState('');
-  const [selectedSectorForSection, setSelectedSectorForSection] = useState('');
-
-  const handleAddSector = () => {
-    if(newSectorName.trim() === '') return alert('O nome do setor é obrigatório.');
-    addSector({ name: newSectorName, description: newSectorDesc });
-    setNewSectorName('');
-    setNewSectorDesc('');
-    setIsSectorModalOpen(false);
-  };
+  const [setores, setSetores] = useState<Sector[]>([]);
+  const [secoes, setSecoes] = useState<Section[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("visao-geral");
   
-  const handleAddSection = () => {
-    if(newSectionName.trim() === '') return alert('O nome da seção é obrigatório.');
-    if(selectedSectorForSection === '') return alert('Selecione um setor.');
-    addSection({ name: newSectionName, sector: selectedSectorForSection, description: newSectionDesc });
-    setNewSectionName('');
-    setNewSectionDesc('');
-    setSelectedSectorForSection('');
-    setIsSectionModalOpen(false);
+  const [showSetorForm, setShowSetorForm] = useState(false);
+  const [editingSetor, setEditingSetor] = useState<Sector | null>(null);
+  
+  const [showSecaoForm, setShowSecaoForm] = useState(false);
+  const [editingSecao, setEditingSecao] = useState<Section | null>(null);
+
+  useEffect(() => {
+    loadData();
+  }, [allSectors, allSections]);
+
+  const loadData = () => {
+    setIsLoading(true);
+    setSetores(allSectors);
+    setSecoes(allSections);
+    setIsLoading(false);
   };
 
-  const renderContent = () => {
-      switch(activeTab) {
-          case 'General':
-              const groupedSections = sections.reduce((acc, section) => {
-                  if(!acc[section.sector]) acc[section.sector] = [];
-                  acc[section.sector].push(section);
-                  return acc;
-              }, {} as {[key: string]: Section[]});
-
-              return (
-                <Card>
-                    <h3 className="text-xl font-bold mb-4">Visão Geral da Estrutura</h3>
-                    <div className="space-y-4">
-                        {sectors.map(sector => (
-                            <div key={sector.id}>
-                                <h4 className="font-bold text-lg flex items-center"><BuildingIcon className="w-5 h-5 mr-2 text-brand-blue"/>{sector.name}</h4>
-                                <ul className="list-disc pl-10 mt-2 space-y-1 text-brand-text">
-                                    {(groupedSections[sector.name] || []).map(section => (
-                                        <li key={section.id}>{section.name}</li>
-                                    ))}
-                                    {(groupedSections[sector.name] || []).length === 0 && <li className="text-gray-400">Nenhuma seção cadastrada</li>}
-                                </ul>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-              );
-          case 'Sectors':
-              return (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sectors.map(s => <SectorCard key={s.id} sector={s} />)}
-                 </div>
-              );
-          case 'Sections':
-              return (
-                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sections.map(s => <SectionCard key={s.id} section={s} />)}
-                 </div>
-              );
-          default: return null;
+  const handleSetorSubmit = async (setorData: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
+    try {
+      if (editingSetor) {
+        updateSector(editingSetor.id, setorData);
+      } else {
+        addSector(setorData);
       }
-  }
+      
+      setShowSetorForm(false);
+      setEditingSetor(null);
+    } catch (error) {
+      console.error("Erro ao salvar setor:", error);
+    }
+  };
+
+  const handleSecaoSubmit = async (secaoData: Omit<Section, 'id' | 'ativo'>) => {
+    try {
+      if (editingSecao) {
+        updateSection(editingSecao.id, secaoData);
+      } else {
+        addSection(secaoData);
+      }
+      
+      setShowSecaoForm(false);
+      setEditingSecao(null);
+    } catch (error) {
+      console.error("Erro ao salvar seção:", error);
+    }
+  };
+
+  const handleSetorDelete = async (setorId: string) => {
+    const secoesDoSetor = secoes.filter(s => s.setor_id === setorId && s.ativo);
+    
+    if (secoesDoSetor.length > 0) {
+      alert("Não é possível excluir este setor pois ele possui seções vinculadas.");
+      return;
+    }
+
+    if (window.confirm("Tem certeza que deseja excluir este setor?")) {
+      try {
+        updateSector(setorId, { ativo: false });
+      } catch (error) {
+        console.error("Erro ao excluir setor:", error);
+      }
+    }
+  };
+
+  const handleSecaoDelete = async (secaoId: string) => {
+    if (window.confirm("Tem certeza que deseja excluir esta seção?")) {
+      try {
+        updateSection(secaoId, { ativo: false });
+      } catch (error) {
+        console.error("Erro ao excluir seção:", error);
+      }
+    }
+  };
+
+  // FIX: Add handlers for edit actions to pass to child components.
+  const handleSetorEdit = (setor: Sector) => {
+    setEditingSetor(setor);
+    setShowSetorForm(true);
+  };
+
+  const handleSecaoEdit = (secao: Section) => {
+    setEditingSecao(secao);
+    setShowSecaoForm(true);
+  };
+
+  const stats = {
+    setores: setores.filter(s => s.ativo).length,
+    secoes: secoes.filter(s => s.ativo).length,
+    totalSetores: setores.length,
+    totalSecoes: secoes.length
+  };
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
         <h2 className="text-2xl font-bold text-brand-text">Estrutura Organizacional</h2>
-        <p className="text-brand-text-light">Gerencie setores e seções da loja</p>
+        <p className="text-brand-text-light mt-1">Gerencie setores e seções da loja</p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card> <p className="text-sm text-brand-text-light">Setores Ativos</p> <p className="text-2xl font-bold">{sectors.length}</p> </Card>
-          <Card> <p className="text-sm text-brand-text-light">Seções Ativas</p> <p className="text-2xl font-bold">{sections.length}</p> </Card>
-          <Card> <p className="text-sm text-brand-text-light">Total Setores</p> <p className="text-2xl font-bold">{sectors.length}</p> </Card>
-          <Card> <p className="text-sm text-brand-text-light">Total Seções</p> <p className="text-2xl font-bold">{sections.length}</p> </Card>
-      </div>
-
-      <Card>
-        <div className="flex justify-between items-center mb-4">
-            <div className="flex space-x-2">
-                <TabButton active={activeTab === 'General'} onClick={() => setActiveTab('General')}>Visão Geral</TabButton>
-                <TabButton active={activeTab === 'Sectors'} onClick={() => setActiveTab('Sectors')}>Setores</TabButton>
-                <TabButton active={activeTab === 'Sections'} onClick={() => setActiveTab('Sections')}>Seções</TabButton>
+      {/* Stats */}
+      <div className="grid md:grid-cols-4 gap-4">
+        <Card className="shadow-sm">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Setores Ativos</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.setores}</p>
+              </div>
+              <BuildingIcon className="w-8 h-8 text-blue-500" />
             </div>
-            { activeTab !== 'General' &&
-              <button onClick={() => activeTab === 'Sectors' ? setIsSectorModalOpen(true) : setIsSectionModalOpen(true)} className="bg-brand-blue hover:bg-brand-dark-blue text-white font-bold py-2 px-4 rounded-lg flex items-center">
-                  <PlusCircleIcon className="w-5 h-5 mr-2" />
-                  {activeTab === 'Sectors' ? 'Novo Setor' : 'Nova Seção'}
-              </button>
-            }
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Seções Ativas</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.secoes}</p>
+              </div>
+              <LayersIcon className="w-8 h-8 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Total Setores</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalSetores}</p>
+              </div>
+              <BuildingIcon className="w-8 h-8 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-500 mb-2">Total Seções</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalSecoes}</p>
+              </div>
+              <LayersIcon className="w-8 h-8 text-orange-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Tabs */}
+      <div className="bg-white rounded-lg border border-brand-gray shadow-sm">
+        <div className="p-2 border-b grid grid-cols-3 gap-2">
+          <button onClick={() => setActiveTab('visao-geral')} className={`px-3 py-1.5 text-sm font-medium rounded-md ${activeTab === 'visao-geral' ? 'bg-blue-100 text-brand-blue' : 'hover:bg-gray-100'}`}>Visão Geral</button>
+          <button onClick={() => setActiveTab('setores')} className={`px-3 py-1.5 text-sm font-medium rounded-md ${activeTab === 'setores' ? 'bg-blue-100 text-brand-blue' : 'hover:bg-gray-100'}`}>Setores</button>
+          <button onClick={() => setActiveTab('secoes')} className={`px-3 py-1.5 text-sm font-medium rounded-md ${activeTab === 'secoes' ? 'bg-blue-100 text-brand-blue' : 'hover:bg-gray-100'}`}>Seções</button>
         </div>
-        {renderContent()}
-      </Card>
-      
-       <Modal isOpen={isSectorModalOpen} onClose={() => setIsSectorModalOpen(false)} title="Novo Setor">
-         <div className="space-y-4">
-            <input type="text" placeholder="Nome do Setor" className="w-full p-2 border rounded-md" value={newSectorName} onChange={(e) => setNewSectorName(e.target.value)} />
-            <textarea placeholder="Descrição" className="w-full p-2 border rounded-md" rows={3} value={newSectorDesc} onChange={(e) => setNewSectorDesc(e.target.value)}></textarea>
-             <div className="flex justify-end space-x-2 pt-4">
-                <button onClick={() => setIsSectorModalOpen(false)} className="px-4 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>
-                <button onClick={handleAddSector} className="px-4 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue">Salvar</button>
-            </div>
-         </div>
-       </Modal>
-       
-       <Modal isOpen={isSectionModalOpen} onClose={() => setIsSectionModalOpen(false)} title="Nova Seção">
-        <div className="space-y-4">
-            <input type="text" placeholder="Nome da Seção" className="w-full p-2 border rounded-md" value={newSectionName} onChange={(e) => setNewSectionName(e.target.value)} />
-             <select className="w-full p-2 border rounded-md bg-white" value={selectedSectorForSection} onChange={(e) => setSelectedSectorForSection(e.target.value)}>
-                <option value="">Selecione um setor</option>
-                {sectors.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
-            </select>
-            <textarea placeholder="Descrição" className="w-full p-2 border rounded-md" rows={3} value={newSectionDesc} onChange={(e) => setNewSectionDesc(e.target.value)}></textarea>
-             <div className="flex justify-end space-x-2 pt-4">
-                <button onClick={() => setIsSectionModalOpen(false)} className="px-4 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>
-                <button onClick={handleAddSection} className="px-4 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue">Salvar</button>
-            </div>
-         </div>
-       </Modal>
 
+        <div className="p-6">
+        {activeTab === 'visao-geral' && (
+          <EstruturaTree 
+            setores={setores} 
+            secoes={secoes}
+            isLoading={isLoading}
+          />
+        )}
+
+        {activeTab === 'setores' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Gerenciar Setores</h3>
+              <Button 
+                onClick={() => setShowSetorForm(true)}
+                className="bg-brand-blue text-white hover:bg-brand-dark-blue px-4 py-2"
+              >
+                <PlusCircleIcon className="w-4 h-4 mr-2" />
+                Novo Setor
+              </Button>
+            </div>
+
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3].map(i => (
+                  <Card key={i}><CardContent><div className="animate-pulse space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-3 bg-gray-200 rounded"></div><div className="h-3 bg-gray-200 rounded w-1/2"></div></div></CardContent></Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {setores.filter(s => s.ativo).map((setor) => (
+                  <SetorCard
+                    key={setor.id}
+                    setor={setor}
+                    secoes={secoes.filter(s => s.setor_id === setor.id && s.ativo)}
+                    onEdit={handleSetorEdit}
+                    onDelete={handleSetorDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'secoes' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">Gerenciar Seções</h3>
+              <Button 
+                onClick={() => setShowSecaoForm(true)}
+                className="bg-brand-blue text-white hover:bg-brand-dark-blue px-4 py-2"
+                disabled={setores.filter(s => s.ativo).length === 0}
+              >
+                <PlusCircleIcon className="w-4 h-4 mr-2" />
+                Nova Seção
+              </Button>
+            </div>
+
+            {setores.filter(s => s.ativo).length === 0 && (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <BuildingIcon className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">Nenhum setor encontrado</h3>
+                  <p className="text-gray-500 mb-4">
+                    Você precisa criar pelo menos um setor antes de adicionar seções
+                  </p>
+                  <Button 
+                    onClick={() => {
+                      setActiveTab("setores");
+                      setShowSetorForm(true);
+                    }}
+                    className="bg-brand-blue text-white hover:bg-brand-dark-blue px-4 py-2"
+                  >
+                    Criar Primeiro Setor
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
+            {isLoading ? (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4].map(i => (
+                  <Card key={i}><CardContent><div className="animate-pulse space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div><div className="h-3 bg-gray-200 rounded"></div><div className="h-3 bg-gray-200 rounded w-1/2"></div></div></CardContent></Card>
+                ))}
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {secoes.filter(s => s.ativo).map((secao) => (
+                  <SecaoCard
+                    key={secao.id}
+                    secao={secao}
+                    setores={setores}
+                    onEdit={handleSecaoEdit}
+                    onDelete={handleSecaoDelete}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        </div>
+      </div>
+
+      {/* Forms */}
+      {showSetorForm && (
+        <SetorForm
+          setor={editingSetor}
+          onSubmit={handleSetorSubmit}
+          onCancel={() => {
+            setShowSetorForm(false);
+            setEditingSetor(null);
+          }}
+        />
+      )}
+
+      {showSecaoForm && (
+        <SecaoForm
+          secao={editingSecao}
+          setores={setores.filter(s => s.ativo)}
+          onSubmit={handleSecaoSubmit}
+          onCancel={() => {
+            setShowSecaoForm(false);
+            setEditingSecao(null);
+          }}
+        />
+      )}
     </div>
   );
-};
-
-export default Structure;
+}

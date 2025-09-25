@@ -1,211 +1,331 @@
+import React, { useState, useEffect } from "react";
+import { Employee, Activity, Occurrence, FeedbackData } from "../types";
+import { 
+  MessageSquareIcon, 
+  UsersIcon, 
+  CalendarIcon, 
+  StarIcon, 
+  AlertTriangleIcon,
+  SaveIcon,
+  XIcon
+} from "../components/icons";
+import { useNavigate } from "react-router-dom";
+import { useData } from "../context/DataContext";
+import { useAuth } from "../context/AuthContext";
+
+import FuncionarioSelector from "../components/feedback/FuncionarioSelector";
+import AtividadeSelector from "../components/feedback/AtividadeSelector";
+import OcorrenciaSelector from "../components/feedback/OcorrenciaSelector";
+import FeedbackPreview from "../components/feedback/FeedbackPreview";
+
+// Helper components to replicate UI from example
+const Card: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => <div className={`bg-white rounded-xl border border-brand-gray shadow-sm ${className}`}>{children}</div>;
+const CardHeader: React.FC<{children: React.ReactNode}> = ({ children }) => <div className="p-6 pb-4">{children}</div>;
+const CardTitle: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => <h3 className={`text-lg font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
+const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => <div className={`p-6 pt-0 ${className}`}>{children}</div>;
+const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ children, className, ...props }) => <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 px-4 py-2 ${className}`} {...props}>{children}</button>;
+const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ children, ...props }) => <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" {...props}>{children}</label>;
+const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${props.className}`} {...props} />;
+const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${props.className}`} {...props} />;
+const Select: React.FC<{children: React.ReactNode, value: string, onValueChange: (val:string) => void}> = ({children, value, onValueChange}) => <select value={value} onChange={e => onValueChange(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50">{children}</select>;
+const SelectItem: React.FC<{children: React.ReactNode, value: string}> = ({children, value}) => <option value={value}>{children}</option>;
 
 
-import React, { useState } from 'react';
-import Card from '../components/Card';
-import { useData } from '../context/DataContext';
-import { Activity, Occurrence, OccurrenceCategory } from '../types';
-import { StarIcon, CalendarIcon, ChevronDownIcon, XIcon } from '../components/icons';
+export default function NewFeedback() {
+  const navigate = useNavigate();
+  const { employees, activities, occurrences, addFeedback } = useData();
+  const { user } = useAuth();
+  
+  const [activeEmployees, setActiveEmployees] = useState<Employee[]>([]);
+  const [activeActivities, setActiveActivities] = useState<Activity[]>([]);
+  const [activeOccurrences, setActiveOccurrences] = useState<Occurrence[]>([]);
 
-const getOccurrenceGroup = (category: OccurrenceCategory) => {    
-    switch (category) {
-        case OccurrenceCategory.DesempenhoExcepcional: return 'Desempenho Excepcional';
-        case OccurrenceCategory.PrecisaMelhorar: return 'Precisa Melhorar';
-        case OccurrenceCategory.Positivo: return 'Positivo';
-        case OccurrenceCategory.ViolacaoPolitica: return 'Violação de Política';
-        default: return 'Outros';
-    }
-}
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-const getOccurrenceIcon = (category: OccurrenceCategory) => {
-    switch (category) {
-        case OccurrenceCategory.DesempenhoExcepcional: return <span className="text-blue-500">△</span>;
-        case OccurrenceCategory.PrecisaMelhorar: return <span className="text-yellow-500">!</span>;
-        case OccurrenceCategory.Positivo: return <span className="text-green-500">✓</span>;
-        case OccurrenceCategory.ViolacaoPolitica: return <span className="text-red-500">⊘</span>;
-    }
-}
+  const [feedbackData, setFeedbackData] = useState({
+    employeeId: "",
+    feedbackDate: new Date().toISOString().split('T')[0],
+    observedActivities: [],
+    qualitativeFeedback: "",
+    occurrences: [],
+    shift: "abertura"
+  });
 
-const NewFeedback: React.FC = () => {
-    const { employees, activities, occurrences } = useData();
-    const [selectedActivities, setSelectedActivities] = useState<Activity[]>([]);
-    const [selectedOccurrences, setSelectedOccurrences] = useState<Occurrence[]>([]);
-    const [activityRatings, setActivityRatings] = useState<{[key: string]: number}>({});
+  useEffect(() => {
+    // In a real app, this would be an API call. Here we just filter the context data.
+    setActiveEmployees(employees.filter(f => f.status === 'Ativo'));
+    setActiveActivities(activities); // Assuming all context activities are active
+    setActiveOccurrences(occurrences); // Assuming all context occurrences are active
+    setIsLoading(false);
+  }, [employees, activities, occurrences]);
 
-    // FIX: Refactored score calculation to be more robust and readable, resolving type errors.
-    const ratingsValues = Object.values(activityRatings);
-    const averageActivityScore = ratingsValues.length > 0 ? ratingsValues.reduce((acc: number, rating: number) => acc + rating, 0) / ratingsValues.length : 0;
-    const occurrenceImpact = selectedOccurrences.reduce((acc: number, o: Occurrence) => acc + o.impact, 0);
-    const totalScore = averageActivityScore + occurrenceImpact;
-
-    const finalScore = Math.max(0, Math.min(10, totalScore)).toFixed(1);
-
-    const toggleActivity = (activity: Activity) => {
-        if (selectedActivities.find(a => a.id === activity.id)) {
-            setSelectedActivities(prev => prev.filter(a => a.id !== activity.id));
-            setActivityRatings(prev => {
-                const newRatings = {...prev};
-                delete newRatings[activity.id];
-                return newRatings;
-            })
+  const handleActivityChange = (activityId, rating, observations = "") => {
+    setFeedbackData(prev => {
+      const newActivities = [...prev.observedActivities];
+      const existingIndex = newActivities.findIndex(a => a.activityId === activityId);
+      
+      if (existingIndex >= 0) {
+        if (rating === null) {
+          newActivities.splice(existingIndex, 1);
         } else {
-            setSelectedActivities(prev => [...prev, activity]);
-            setActivityRatings(prev => ({...prev, [activity.id]: 5}));
+          newActivities[existingIndex] = { activityId, rating, observations };
         }
-    };
+      } else if (rating !== null) {
+        newActivities.push({ activityId, rating, observations });
+      }
+      
+      return { ...prev, observedActivities: newActivities };
+    });
+  };
 
-    const toggleOccurrence = (occurrence: Occurrence) => {
-        if (selectedOccurrences.find(o => o.id === occurrence.id)) {
-            setSelectedOccurrences(prev => prev.filter(o => o.id !== occurrence.id));
-        } else {
-            setSelectedOccurrences(prev => [...prev, occurrence]);
-        }
-    };
+  const handleOccurrenceChange = (occurrenceId, details = "") => {
+    setFeedbackData(prev => {
+      const newOccurrences = [...prev.occurrences];
+      const existingIndex = newOccurrences.findIndex(o => o.occurrenceId === occurrenceId);
+      
+      if (existingIndex >= 0) {
+          // If details are null, it means uncheck
+          if (details === null) {
+            newOccurrences.splice(existingIndex, 1);
+          } else {
+            // Update details
+            newOccurrences[existingIndex] = { ...newOccurrences[existingIndex], details };
+          }
+      } else {
+        newOccurrences.push({ occurrenceId, details });
+      }
+      
+      return { ...prev, occurrences: newOccurrences };
+    });
+  };
 
-    const groupedOccurrences = occurrences.reduce((acc, o) => {
-        const group = getOccurrenceGroup(o.category);
-        if(!acc[group]) acc[group] = [];
-        acc[group].push(o);
-        return acc;
-    }, {} as {[key: string]: Occurrence[]});
+  const calculateFinalScore = () => {
+    if (feedbackData.observedActivities.length === 0) return 0;
+    
+    let totalScore = 0;
+    let totalWeight = 0;
+    
+    feedbackData.observedActivities.forEach(activity => {
+      const activityInfo = activeActivities.find(a => a.id === activity.activityId);
+      if (activityInfo) {
+        totalScore += activity.rating * activityInfo.weight;
+        totalWeight += activityInfo.weight;
+      }
+    });
+    
+    const baseScore = totalWeight > 0 ? totalScore / totalWeight : 0;
+    
+    let occurrenceImpact = 0;
+    feedbackData.occurrences.forEach(occurrence => {
+      const occurrenceInfo = activeOccurrences.find(o => o.id === occurrence.occurrenceId);
+      if (occurrenceInfo) {
+        occurrenceImpact += occurrenceInfo.impact || 0;
+      }
+    });
+    
+    return Math.max(0, Math.min(10, baseScore + occurrenceImpact));
+  };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackData.employeeId) {
+        alert("Por favor, selecione um funcionário.");
+        return;
+    }
+    setIsSaving(true);
+    
+    try {
+      const finalScore = calculateFinalScore();
+      
+      const submissionData: FeedbackData = {
+        ...feedbackData,
+        finalScore: Number(finalScore.toFixed(1)),
+        authorId: user?.id || "unknown_user"
+      };
+
+      addFeedback(submissionData);
+      
+      navigate("/");
+    } catch (error) {
+      console.error("Erro ao salvar feedback:", error);
+    }
+    
+    setIsSaving(false);
+  };
+
+  if (isLoading) {
     return (
-        <div className="bg-white rounded-lg shadow-lg p-6 relative">
-             <div className="flex justify-between items-center mb-6 pb-4 border-b">
-                <div>
-                    <h2 className="text-2xl font-bold text-brand-text">Novo Feedback</h2>
-                    <p className="text-brand-text-light">Registre o desempenho e desenvolvimento da equipe</p>
-                </div>
-                <button className="text-brand-text-light hover:text-red-500 transition-colors">
-                    <XIcon className="w-6 h-6 mr-2" />
-                </button>
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+              <p className="mt-4 text-gray-500">Carregando formulário...</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-6">
-                    {/* Basic Info */}
-                    <Card className="!p-4">
-                        <h3 className="font-bold text-lg mb-4 px-2">Informações Básicas</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                           <div className="relative">
-                                <select className="w-full p-2 border rounded-md bg-white appearance-none">
-                                    <option value="">Selecione um funcionário</option>
-                                    {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
-                                </select>
-                                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                           </div>
-                           <div className="relative">
-                                <input type="text" value="25/09/2025" className="w-full p-2 border rounded-md" readOnly/>
-                                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                           </div>
-                           <div className="relative">
-                                <select className="w-full p-2 border rounded-md bg-white appearance-none">
-                                    <option>Abertura</option>
-                                    <option>Fechamento</option>
-                                </select>
-                                <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
-                           </div>
-                        </div>
-                    </Card>
-
-                    {/* Activities */}
-                    <Card className="!p-4">
-                        <h3 className="font-bold text-lg mb-4 px-2">Atividades Observadas</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {activities.map(activity => (
-                                <div key={activity.id} onClick={() => toggleActivity(activity)}
-                                     className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedActivities.find(a => a.id === activity.id) ? 'border-brand-blue bg-blue-50' : 'hover:border-gray-400'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <p className="font-semibold">{activity.name}</p>
-                                            <p className="text-sm text-brand-text-light">{activity.description}</p>
-                                        </div>
-                                        <div className="text-xs font-semibold bg-gray-200 text-brand-text-light px-2 py-1 rounded-full whitespace-nowrap">Peso {activity.weight}</div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                        {selectedActivities.length > 0 && <div className="mt-6 border-t pt-4 space-y-4">
-                            <h4 className="font-bold px-2">Pontuação das Atividades</h4>
-                            {selectedActivities.map(activity => (
-                                <div key={activity.id} className="px-2">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <label className="font-semibold">{activity.name}</label>
-                                        <div className="flex items-center">
-                                            {[...Array(10)].map((_, i) => (
-                                                <StarIcon key={i} className={`w-5 h-5 cursor-pointer ${activityRatings[activity.id] > i ? 'text-yellow-400' : 'text-gray-300'}`} filled={activityRatings[activity.id] > i} onClick={() => setActivityRatings(prev => ({...prev, [activity.id]: i+1}))} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <input type="range" min="0" max="10" value={activityRatings[activity.id] || 0}
-                                        onChange={(e) => setActivityRatings(prev => ({...prev, [activity.id]: parseInt(e.target.value)}))}
-                                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
-                                    <textarea placeholder="Detalhar observações sobre esta atividade..." className="w-full mt-2 p-2 border rounded-md text-sm" rows={2}></textarea>
-                                </div>
-                            ))}
-                        </div>}
-                    </Card>
-
-                    {/* Qualitative Feedback */}
-                     <Card className="!p-4">
-                        <h3 className="font-bold text-lg mb-2 px-2">Feedback Qualitativo</h3>
-                         <textarea placeholder="Descreva observações detalhadas sobre o desempenho, pontos fortes, áreas de melhoria e orientações para desenvolvimento..." className="w-full p-2 border rounded-md text-sm" rows={4}></textarea>
-                     </Card>
-                     
-                    {/* Occurrences */}
-                    <Card className="!p-4">
-                        <h3 className="font-bold text-lg mb-4 px-2">Ocorrências</h3>
-                        <div className="space-y-4">
-                            {Object.entries(groupedOccurrences).map(([group, occs]) => (
-                                <div key={group}>
-                                    <h4 className="font-semibold text-brand-text-light mb-2 flex items-center">{getOccurrenceIcon(occs[0].category)}<span className="ml-2">{group}</span></h4>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {occs.map(o => (
-                                            <div key={o.id} onClick={() => toggleOccurrence(o)}
-                                                 className={`flex justify-between items-center p-3 border rounded-lg cursor-pointer transition-all ${selectedOccurrences.find(so => so.id === o.id) ? 'border-brand-blue bg-blue-50' : 'hover:border-gray-400'}`}>
-                                                <div>
-                                                    <p className="font-semibold">{o.name}</p>
-                                                    {selectedOccurrences.find(so => so.id === o.id) && <textarea onClick={e => e.stopPropagation()} placeholder="Detalhes da Ocorrência" className="w-full mt-2 p-1 border rounded-md text-sm" rows={1}></textarea>}
-                                                </div>
-                                                <span className={`font-bold text-lg ${o.impact > 0 ? 'text-green-500' : 'text-red-500'}`}>{o.impact > 0 ? '+' : ''}{o.impact}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </Card>
-                    
-                     <div className="flex justify-end space-x-4">
-                        <button className="px-6 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>
-                        <button className="px-6 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue">Salvar Feedback</button>
-                    </div>
-                </div>
-                
-                {/* Summary */}
-                <div className="md:col-span-1">
-                    <div className="sticky top-8">
-                        <Card>
-                            <h3 className="font-bold text-lg mb-4 text-center">Resumo do Feedback</h3>
-                            <div className="text-center my-6">
-                                <p className="text-5xl font-bold text-brand-text">{finalScore}</p>
-                                <p className="font-semibold text-yellow-500">Precisa Melhorar</p>
-                            </div>
-                            <div className="space-y-2 text-sm border-t pt-4">
-                                <h4 className="font-bold mb-2">Detalhes:</h4>
-                                <div className="flex justify-between"><span>Atividades ({selectedActivities.length})</span> <span>{averageActivityScore.toFixed(1)}/10</span></div>
-                                <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{occurrenceImpact}</span></div>
-                                {selectedOccurrences.map(o => (
-                                     <div key={o.id} className="flex justify-between pl-4 text-brand-text-light"><span>• {o.name}</span> <span>{o.impact > 0 ? '+' : ''}{o.impact}</span></div>
-                                ))}
-                            </div>
-                            <div className="text-center text-brand-text-light mt-6">
-                                 <p>Selecione um funcionário para ver o resumo</p>
-                            </div>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        </div>
+          </CardContent>
+        </Card>
+      </div>
     );
-};
+  }
 
-export default NewFeedback;
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-semibold text-gray-900">Novo Feedback</h2>
+          <p className="text-gray-500 mt-1">Registre o desempenho e desenvolvimento da equipe</p>
+        </div>
+        <Button 
+          className="bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-100"
+          onClick={() => navigate("/")}
+        >
+          <XIcon className="w-4 h-4 mr-2" />
+          Cancelar
+        </Button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Informações Básicas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UsersIcon className="w-5 h-5 text-blue-500" />
+              Informações Básicas
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <FuncionarioSelector
+                funcionarios={activeEmployees}
+                selectedId={feedbackData.employeeId}
+                onChange={(id) => setFeedbackData(prev => ({ ...prev, employeeId: id }))}
+              />
+              
+              <div className="space-y-2">
+                <Label htmlFor="feedbackDate">Data do Feedback</Label>
+                <Input
+                  id="feedbackDate"
+                  type="date"
+                  value={feedbackData.feedbackDate}
+                  onChange={(e) => setFeedbackData(prev => ({ ...prev, feedbackDate: e.target.value }))}
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="shift">Turno</Label>
+                <Select
+                  value={feedbackData.shift} 
+                  onValueChange={(value) => setFeedbackData(prev => ({ ...prev, shift: value }))}
+                >
+                    <SelectItem value="abertura">Abertura</SelectItem>
+                    <SelectItem value="intermediario">Intermediário</SelectItem>
+                    <SelectItem value="fechamento">Fechamento</SelectItem>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Atividades Observadas */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <StarIcon className="w-5 h-5 text-yellow-500" />
+              Atividades Observadas
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <AtividadeSelector
+              atividades={activeActivities}
+              selectedAtividades={feedbackData.observedActivities}
+              onChange={handleActivityChange}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Feedback Qualitativo */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <MessageSquareIcon className="w-5 h-5 text-green-500" />
+              Feedback Qualitativo
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Textarea
+              placeholder="Descreva observações detalhadas sobre o desempenho, pontos fortes, áreas de melhoria e orientações para desenvolvimento..."
+              value={feedbackData.qualitativeFeedback}
+              onChange={(e) => setFeedbackData(prev => ({ ...prev, qualitativeFeedback: e.target.value }))}
+              className="min-h-[120px]"
+            />
+          </CardContent>
+        </Card>
+
+        {/* Ocorrências */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertTriangleIcon className="w-5 h-5 text-orange-500" />
+              Ocorrências
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <OcorrenciaSelector
+              ocorrencias={activeOccurrences}
+              selectedOcorrencias={feedbackData.occurrences}
+              onChange={handleOccurrenceChange}
+            />
+          </CardContent>
+        </Card>
+
+        {/* Preview e Ações */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Ações</CardTitle>
+              </CardHeader>
+              <CardContent className="flex gap-4">
+                <Button 
+                  type="submit" 
+                  className="bg-brand-blue text-white hover:bg-brand-dark-blue flex-1"
+                  disabled={!feedbackData.employeeId || isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <SaveIcon className="w-4 h-4 mr-2" />
+                      Salvar Feedback
+                    </>
+                  )}
+                </Button>
+                <Button 
+                  type="button" 
+                  className="bg-transparent border border-gray-300 text-gray-700 hover:bg-gray-100"
+                  onClick={() => navigate("/")}
+                >
+                  Cancelar
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <FeedbackPreview
+            feedbackData={feedbackData}
+            activities={activeActivities}
+            occurrences={activeOccurrences}
+            employees={activeEmployees}
+            finalScore={calculateFinalScore()}
+          />
+        </div>
+      </form>
+    </div>
+  );
+}

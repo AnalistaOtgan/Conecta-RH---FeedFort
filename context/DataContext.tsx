@@ -1,18 +1,18 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, User } from '../types';
+import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, User, FeedbackData } from '../types';
 
 // Mock Data
 const sectorsData: Sector[] = [
-    { id: 'sec1', name: 'Mercearia', description: 'Setor de produtos secos e embalados.', sections: 2 },
-    { id: 'sec2', name: 'Hortifruti', description: 'Setor de frutas, verduras e legumes.', sections: 1 },
-    { id: 'sec3', name: 'Açougue', description: 'Setor de carnes.', sections: 1 },
+    { id: 'sec1', name: 'Mercearia', description: 'Setor de produtos secos e embalados.', sections: 2, ativo: true },
+    { id: 'sec2', name: 'Hortifruti', description: 'Setor de frutas, verduras e legumes.', sections: 1, ativo: true },
+    { id: 'sec3', name: 'Açougue', description: 'Setor de carnes.', sections: 1, ativo: true },
 ];
 
 const sectionsData: Section[] = [
-    { id: 'sct1', name: 'Corredor 1', sector: 'Mercearia', description: 'Massas e molhos' },
-    { id: 'sct2', name: 'Corredor 2', sector: 'Mercearia', description: 'Enlatados e conservas' },
-    { id: 'sct3', name: 'Bancada de Folhas', sector: 'Hortifruti', description: 'Verduras e legumes frescos' },
-    { id: 'sct4', name: 'Balcão de Atendimento', sector: 'Açougue', description: 'Cortes de carne bovina e suína' },
+    { id: 'sct1', name: 'Corredor 1', setor_id: 'sec1', description: 'Massas e molhos', ativo: true },
+    { id: 'sct2', name: 'Corredor 2', setor_id: 'sec1', description: 'Enlatados e conservas', ativo: true },
+    { id: 'sct3', name: 'Bancada de Folhas', setor_id: 'sec2', description: 'Verduras e legumes frescos', ativo: true },
+    { id: 'sct4', name: 'Balcão de Atendimento', setor_id: 'sec3', description: 'Cortes de carne bovina e suína', ativo: true },
 ];
 
 const employeesData: Employee[] = [
@@ -52,11 +52,14 @@ interface DataContextType {
     sectors: Sector[];
     sections: Section[];
     feedbacks: DetailedFeedback[];
-    addSector: (sector: Omit<Sector, 'id' | 'sections'>) => void;
-    addSection: (section: Omit<Section, 'id'>) => void;
+    addSector: (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => void;
+    updateSector: (id: string, data: Partial<Omit<Sector, 'id'>>) => void;
+    addSection: (section: Omit<Section, 'id' | 'ativo'>) => void;
+    updateSection: (id: string, data: Partial<Omit<Section, 'id'>>) => void;
     addActivity: (activity: Omit<Activity, 'id'>) => void;
     addOccurrence: (occurrence: Omit<Occurrence, 'id'>) => void;
     addEmployee: (employee: Omit<Employee, 'id' | 'status' | 'initials' | 'terminationDate' | 'leaderId' | 'leaderName'>) => void;
+    addFeedback: (feedbackData: FeedbackData) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -69,17 +72,25 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [sections, setSections] = useState<Section[]>(sectionsData);
     const [feedbacks, setFeedbacks] = useState<DetailedFeedback[]>(feedbacksData);
 
-    const addSector = (sector: Omit<Sector, 'id' | 'sections'>) => {
-        const newSector: Sector = { ...sector, id: `sec${Date.now()}`, sections: 0 };
+    const addSector = (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
+        const newSector: Sector = { ...sector, id: `sec${Date.now()}`, sections: 0, ativo: true };
         setSectors(prev => [...prev, newSector]);
     };
 
-    const addSection = (section: Omit<Section, 'id'>) => {
-        const newSection: Section = { ...section, id: `sct${Date.now()}` };
+    const updateSector = (id: string, data: Partial<Omit<Sector, 'id'>>) => {
+        setSectors(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+    };
+
+    const addSection = (section: Omit<Section, 'id' | 'ativo'>) => {
+        const newSection: Section = { ...section, id: `sct${Date.now()}`, ativo: true };
         setSections(prev => [...prev, newSection]);
-        setSectors(prevSectors => prevSectors.map(s => s.name === newSection.sector ? { ...s, sections: s.sections + 1 } : s));
+        setSectors(prevSectors => prevSectors.map(s => s.id === newSection.setor_id ? { ...s, sections: s.sections + 1 } : s));
     };
     
+    const updateSection = (id: string, data: Partial<Omit<Section, 'id'>>) => {
+        setSections(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
+    };
+
     const addActivity = (activity: Omit<Activity, 'id'>) => {
         const newActivity: Activity = { ...activity, id: `act${Date.now()}` };
         setActivities(prev => [...prev, newActivity]);
@@ -90,7 +101,6 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setOccurrences(prev => [...prev, newOccurrence]);
     };
 
-    // FIX: Add `addEmployee` function to context to allow creating new employees.
     const addEmployee = (employee: Omit<Employee, 'id' | 'status' | 'initials' | 'terminationDate' | 'leaderId' | 'leaderName'>) => {
         const initials = employee.name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         const newEmployee: Employee = {
@@ -102,8 +112,40 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setEmployees(prev => [...prev, newEmployee]);
     };
 
+    const addFeedback = (feedbackData: FeedbackData) => {
+        const author = employees.find(e => e.id === feedbackData.authorId);
+
+        const newDetailedFeedback: DetailedFeedback = {
+            id: `fb${Date.now()}`,
+            employeeId: feedbackData.employeeId,
+            authorName: author?.name || 'Sistema',
+            date: new Date(feedbackData.feedbackDate).toISOString(),
+            finalScore: feedbackData.finalScore,
+            qualitative: feedbackData.qualitativeFeedback,
+            activities: feedbackData.observedActivities.map(obsAct => {
+                const activityInfo = activities.find(a => a.id === obsAct.activityId);
+                return {
+                    id: obsAct.activityId,
+                    name: activityInfo?.name || 'Desconhecida',
+                    rating: obsAct.rating,
+                    weight: activityInfo?.weight || 0,
+                };
+            }),
+            occurrences: feedbackData.occurrences.map(regOcc => {
+                const occurrenceInfo = occurrences.find(o => o.id === regOcc.occurrenceId);
+                return {
+                    id: regOcc.occurrenceId,
+                    name: occurrenceInfo?.name || 'Desconhecida',
+                    impact: occurrenceInfo?.impact || 0,
+                };
+            }),
+        };
+
+        setFeedbacks(prev => [newDetailedFeedback, ...prev]);
+    };
+
     const value = {
-        user: null, // This would come from AuthContext in a real app
+        user: null,
         employees,
         activities,
         occurrences,
@@ -111,10 +153,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         sections,
         feedbacks,
         addSector,
+        updateSector,
         addSection,
+        updateSection,
         addActivity,
         addOccurrence,
         addEmployee,
+        addFeedback
     };
 
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
