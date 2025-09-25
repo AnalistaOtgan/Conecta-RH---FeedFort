@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import Card from '../components/Card';
 import { useData } from '../context/DataContext';
@@ -29,10 +30,11 @@ const NewFeedback: React.FC = () => {
     const [selectedOccurrences, setSelectedOccurrences] = useState<Occurrence[]>([]);
     const [activityRatings, setActivityRatings] = useState<{[key: string]: number}>({});
 
-    // FIX: Explicitly type accumulator and value in reduce to prevent type inference issues.
-    const totalScore = Object.values(activityRatings).reduce((acc: number, rating: number) => acc + rating, 0) / (Object.keys(activityRatings).length || 1)
-        // FIX: Explicitly typed the accumulator 'acc' to 'number' to resolve the arithmetic operation error.
-        + selectedOccurrences.reduce((acc: number, o) => acc + o.impact, 0);
+    // FIX: Refactored score calculation to be more robust and readable, resolving type errors.
+    const ratingsValues = Object.values(activityRatings);
+    const averageActivityScore = ratingsValues.length > 0 ? ratingsValues.reduce((acc: number, rating: number) => acc + rating, 0) / ratingsValues.length : 0;
+    const occurrenceImpact = selectedOccurrences.reduce((acc: number, o: Occurrence) => acc + o.impact, 0);
+    const totalScore = averageActivityScore + occurrenceImpact;
 
     const finalScore = Math.max(0, Math.min(10, totalScore)).toFixed(1);
 
@@ -76,8 +78,8 @@ const NewFeedback: React.FC = () => {
                     <XIcon className="w-6 h-6 mr-2" />
                 </button>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 space-y-6">
                     {/* Basic Info */}
                     <Card className="!p-4">
                         <h3 className="font-bold text-lg mb-4 px-2">Informações Básicas</h3>
@@ -179,7 +181,7 @@ const NewFeedback: React.FC = () => {
                 </div>
                 
                 {/* Summary */}
-                <div className="lg:col-span-1">
+                <div className="md:col-span-1">
                     <div className="sticky top-8">
                         <Card>
                             <h3 className="font-bold text-lg mb-4 text-center">Resumo do Feedback</h3>
@@ -189,10 +191,9 @@ const NewFeedback: React.FC = () => {
                             </div>
                             <div className="space-y-2 text-sm border-t pt-4">
                                 <h4 className="font-bold mb-2">Detalhes:</h4>
-                                {/* FIX: Explicitly type accumulator and value in reduce to prevent type inference issues. */}
-                                <div className="flex justify-between"><span>Atividades ({selectedActivities.length})</span> <span>{ (Object.values(activityRatings).reduce((a: number, b: number) => a + b, 0) / (Object.keys(activityRatings).length || 1)).toFixed(1) }/10</span></div>
-                                {/* FIX: Explicitly typed the accumulator 'a' to 'number' to resolve the arithmetic operation error. */}
-                                <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{selectedOccurrences.reduce((a: number, o) => a+o.impact, 0)}</span></div>
+                                {/* FIX: Replaced inline calculations with pre-calculated variables for clarity and to fix type errors. */}
+                                <div className="flex justify-between"><span>Atividades ({selectedActivities.length})</span> <span>{averageActivityScore.toFixed(1)}/10</span></div>
+                                <div className="flex justify-between"><span>Ocorrências ({selectedOccurrences.length})</span> <span>{occurrenceImpact}</span></div>
                                 {selectedOccurrences.map(o => (
                                      <div key={o.id} className="flex justify-between pl-4 text-brand-text-light"><span>• {o.name}</span> <span>{o.impact > 0 ? '+' : ''}{o.impact}</span></div>
                                 ))}

@@ -73,6 +73,13 @@ const Login: React.FC = () => {
                         </button>
                     </div>
                 </form>
+
+                 <div className="mt-4 text-xs text-center text-gray-500 border-t pt-4">
+                    <p className="font-semibold">Usuários de Teste:</p>
+                    <p>Líder: <span className="font-mono">lider@email.com</span> (senha: <span className="font-mono">senha123</span>)</p>
+                    <p>RH: <span className="font-mono">admin@email.com</span> (senha: <span className="font-mono">admin123</span>)</p>
+                    <p>Diretor: <span className="font-mono">diretoria@email.com</span> (senha: <span className="font-mono">admin123</span>)</p>
+                </div>
             </div>
         </div>
     );

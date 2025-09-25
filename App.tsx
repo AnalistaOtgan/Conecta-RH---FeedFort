@@ -7,6 +7,7 @@ import Employees from './pages/Employees';
 import Structure from './pages/Structure';
 import Configuration from './pages/Configuration';
 import Login from './pages/Login';
+import EmployeeDossier from './pages/EmployeeDossier';
 import { DataProvider } from './context/DataContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -25,6 +26,7 @@ const AppRoutes: React.FC = () => {
                 <Route path="/feedback" element={<NewFeedback />} />
                 <Route path="/reports" element={<Reports />} />
                 <Route path="/employees" element={<Employees />} />
+                <Route path="/employees/:employeeId" element={<EmployeeDossier />} />
                 {hasAdminAccess && (
                     <>
                         <Route path="/structure" element={<Structure />} />

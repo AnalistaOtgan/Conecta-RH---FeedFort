@@ -1,27 +1,65 @@
-
 import React from 'react';
 import Card from '../components/Card';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from 'recharts';
 import { CalendarIcon, ChevronDownIcon, DownloadIcon, FilterIcon } from '../components/icons';
-
-const teamPerformanceData = [
-  { name: 'Frente de Loja', media: 8.5 },
-  { name: 'Mercearia', media: 7.2 },
-  { name: 'Açougue', media: 9.1 },
-  { name: 'Padaria', media: 6.8 },
-];
+import { DetailedFeedback, Employee } from '../types';
 
 const Reports: React.FC = () => {
-    const { employees } = useData();
+    const { employees, feedbacks } = useData();
+    const { user } = useAuth();
 
-    // Mock recent feedbacks for report
-    const recentFeedbacks = [
-        { id: 1, employee: 'FERNANDA SILVA DOS SANTOS', date: '22/09/2025', score: 10, sector: 'Frente de Loja', author: 'Líder de Loja' },
-        { id: 2, employee: 'BRENDON SOUSA DE OLIVEIRA', date: '22/09/2025', score: 0, sector: 'Mercearia', author: 'Líder de Loja' },
-        { id: 3, employee: 'CARLOS ALBERTO PEREIRA', date: '21/09/2025', score: 8, sector: 'Açougue', author: 'Líder de Loja' },
-        { id: 4, employee: 'MARIA EDUARDA GONÇALVES', date: '20/09/2025', score: 7, sector: 'Padaria', author: 'Líder de Loja' },
-    ];
+    // Filter data based on user role
+    let teamEmployees: Employee[] = employees;
+    let teamFeedbacks: DetailedFeedback[] = feedbacks;
+
+    if (user?.role === 'Líder de Loja') {
+        teamEmployees = employees.filter(e => e.leaderId === user.id);
+        const teamEmployeeIds = teamEmployees.map(e => e.id);
+        teamFeedbacks = feedbacks.filter(f => teamEmployeeIds.includes(f.employeeId));
+    }
+    
+    // Make table data dynamic
+    const recentFeedbacks = [...teamFeedbacks]
+        .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .map(f => {
+            const employee = teamEmployees.find(e => e.id === f.employeeId);
+            return {
+                id: f.id,
+                employee: employee?.name || 'Desconhecido',
+                date: new Date(f.date).toLocaleDateString('pt-BR'),
+                score: f.finalScore,
+                sector: employee?.sector || 'N/A',
+                author: f.authorName
+            }
+        });
+        
+    // Calculate dynamic performance data
+    const performanceBySector = teamFeedbacks.reduce((acc, feedback) => {
+        const employee = teamEmployees.find(e => e.id === feedback.employeeId);
+        if (employee) {
+            const sectorName = employee.sector;
+            if (!acc[sectorName]) {
+                acc[sectorName] = { totalScore: 0, count: 0 };
+            }
+            acc[sectorName].totalScore += feedback.finalScore;
+            acc[sectorName].count++;
+        }
+        return acc;
+    }, {} as Record<string, { totalScore: number, count: number }>);
+
+    const teamPerformanceData = Object.entries(performanceBySector).map(([name, data]) => ({
+        name,
+        media: data.count > 0 ? parseFloat((data.totalScore / data.count).toFixed(1)) : 0,
+    }));
+    
+    const averageScore = teamFeedbacks.length > 0 ? teamFeedbacks.reduce((acc, f) => acc + f.finalScore, 0) / teamFeedbacks.length : 0;
+    
+    const participationRate = teamEmployees.length > 0 
+        ? (new Set(teamFeedbacks.map(f => f.employeeId)).size / teamEmployees.length) * 100 
+        : 0;
+
 
   return (
     <div className="space-y-6">
@@ -53,7 +91,7 @@ const Reports: React.FC = () => {
                 <div className="relative">
                     <select className="p-2 border rounded-md bg-white appearance-none pr-8">
                         <option>Todos os Funcionários</option>
-                        {employees.map(e => <option key={e.id}>{e.name}</option>)}
+                        {teamEmployees.map(e => <option key={e.id}>{e.name}</option>)}
                     </select>
                     <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
                 </div>
@@ -67,17 +105,15 @@ const Reports: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <Card>
             <p className="text-sm text-brand-text-light">PONTUAÇÃO MÉDIA GERAL</p>
-            <p className="text-3xl font-bold">5.0</p>
-            <p className="text-sm text-green-500">+0.5 vs. mês passado</p>
+            <p className="text-3xl font-bold">{averageScore.toFixed(1)}</p>
           </Card>
           <Card>
             <p className="text-sm text-brand-text-light">TOTAL DE FEEDBACKS</p>
             <p className="text-3xl font-bold">{recentFeedbacks.length}</p>
-            <p className="text-sm text-red-500">-10% vs. mês passado</p>
           </Card>
            <Card>
             <p className="text-sm text-brand-text-light">TAXA DE PARTICIPAÇÃO</p>
-            <p className="text-3xl font-bold">85%</p>
+            <p className="text-3xl font-bold">{participationRate.toFixed(0)}%</p>
             <p className="text-sm text-brand-text-light">Funcionários com feedback</p>
           </Card>
       </div>
@@ -118,7 +154,7 @@ const Reports: React.FC = () => {
                                 <td className="px-6 py-4">{fb.date}</td>
                                 <td className="px-6 py-4">{fb.sector}</td>
                                 <td className="px-6 py-4">{fb.author}</td>
-                                <td className="px-6 py-4 text-right font-bold">{fb.score}/10</td>
+                                <td className="px-6 py-4 text-right font-bold">{fb.score.toFixed(1)}/10</td>
                             </tr>
                         ))}
                     </tbody>

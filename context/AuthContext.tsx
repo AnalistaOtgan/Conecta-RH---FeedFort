@@ -2,50 +2,38 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 
 // Mock users with different roles
-const mockUsers: { [key: string]: User } = {
-  'diretoria@email.com': { name: 'Diretor', role: 'Diretor', avatar: 'D' },
-  'admin@email.com': { name: 'Admin RH', role: 'RH', avatar: 'RH' },
-  'lider@email.com': { name: 'Líder de Loja', role: 'Líder de Loja', avatar: 'L' },
+const mockUsers: { [key: string]: Omit<User, 'managedSectorIds'> } = {
+  'diretoria@email.com': { id: 'user_dir_1', name: 'Diretor', role: 'Diretor', avatar: 'D' },
+  'admin@email.com': { id: 'user_rh_1', name: 'Admin RH', role: 'RH', avatar: 'RH' },
+  'lider@email.com': { id: 'user_ldr_1', name: 'Ana Costa', role: 'Líder de Loja', avatar: 'AC' },
 };
 
 // A safe storage wrapper that checks for localStorage availability once.
 const createSafeStorage = (): Storage => {
-  // In-memory storage fallback
-  const inMemoryStore: { [key: string]: string } = {};
-  const inMemoryStorage: Storage = {
-    getItem: (key: string) => inMemoryStore[key] ?? null,
-    setItem: (key: string, value: string) => {
-      inMemoryStore[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete inMemoryStore[key];
-    },
-    clear: () => {
-      for (const key in inMemoryStore) {
-        delete inMemoryStore[key];
-      }
-    },
-    key: (index: number) => Object.keys(inMemoryStore)[index] ?? null,
-    get length() {
-      return Object.keys(inMemoryStore).length;
-    },
+  const mockStorage: Storage = {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {},
+    key: () => null,
+    length: 0,
   };
 
   try {
     // We need to check for existence and then perform a test operation.
     // The entire block is in a try-catch to handle SecurityError.
-    if (typeof window !== 'undefined' && window.localStorage) {
+    if (window.localStorage) {
       const testKey = '__test_storage_';
       window.localStorage.setItem(testKey, testKey);
       window.localStorage.removeItem(testKey);
       return window.localStorage;
     }
   } catch (e) {
-    console.warn("localStorage is not available, falling back to in-memory storage. User session will not be persisted across page loads.", e);
+    console.warn("localStorage is not available, falling back to in-memory storage. User session will not be persisted.", e);
   }
   
-  // If the try block failed or localStorage is not available, return the in-memory fallback.
-  return inMemoryStorage;
+  // If the try block failed or localStorage is not available, return the mock.
+  return mockStorage;
 };
 
 
@@ -93,20 +81,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for user in storage on initial load
     const userFromStorage = getStoredUser();
     if (userFromStorage) {
-      // FIX: Corrected typo from userFromstorage to userFromStorage.
       setUser(userFromStorage);
     }
     setLoading(false); // Stop loading once user is checked
   }, []);
 
   const login = async (email: string, pass: string) => {
-    // Simple password check for mock purposes
-    const validPassword = (email === 'lider@email.com' && pass === 'senha123') || pass === 'admin123';
     const foundUser = mockUsers[email];
+    
+    // Simple password check for mock purposes
+    const validPassword = 
+        (email === 'lider@email.com' && pass === 'senha123') ||
+        (['admin@email.com', 'diretoria@email.com'].includes(email) && pass === 'admin123');
 
     if (foundUser && validPassword) {
-      setUser(foundUser);
-      setStoredUser(foundUser);
+      setUser(foundUser as User);
+      setStoredUser(foundUser as User);
     } else {
       throw new Error('Credenciais inválidas');
     }
