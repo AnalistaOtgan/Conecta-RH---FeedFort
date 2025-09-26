@@ -10,7 +10,7 @@ interface SetorCardProps {
   onDelete: (id: string) => void | Promise<void>;
 }
 
-export default function SetorCard({ setor, secoes, onEdit, onDelete }: SetorCardProps) {
+const SetorCard: React.FC<SetorCardProps> = ({ setor, secoes, onEdit, onDelete }) => {
   return (
     <Card className="shadow-sm flex flex-col">
       <div className="p-4 border-b">
@@ -40,4 +40,6 @@ export default function SetorCard({ setor, secoes, onEdit, onDelete }: SetorCard
       </div>
     </Card>
   );
-}
+};
+
+export default SetorCard;

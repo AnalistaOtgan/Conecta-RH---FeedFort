@@ -1,3 +1,4 @@
+
 export interface User {
   id: string;
   name: string;
@@ -5,13 +6,43 @@ export interface User {
   avatar: string;
 }
 
+export interface JobHistoryEntry {
+  role: string;
+  sectionId: string;
+  startDate: string;
+  endDate?: string;
+}
+
+export interface MedicalCertificate {
+  id: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  reason: string; // Causa/Motivo
+  cid?: string;    // CID
+}
+
 export interface Employee {
     id: string;
+    // New fields
+    nome_completo: string;
+    email: string;
+    secao_id: string; 
+    turno: 'abertura' | 'intermediario' | 'fechamento' | 'integral';
+    eh_lider: boolean;
+    ativo: boolean;
+    setores_liderados?: string[];
+    jobHistory?: JobHistoryEntry[];
+    isUser?: boolean;
+    
+    // Old fields for compatibility
     name: string;
     role: string;
     sector: string;
     shift: string;
     status: 'Ativo' | 'Inativo';
+
+    // Common fields
     initials: string;
     admissionDate: string;
     terminationDate?: string;
@@ -61,6 +92,7 @@ export interface Section {
 export interface DetailedFeedback {
     id: string;
     employeeId: string;
+    authorId: string;
     authorName: string;
     date: string;
     finalScore: number;
@@ -87,6 +119,7 @@ export interface FeedbackData {
   shift: string;
   observedActivities: ObservedActivity[];
   qualitativeFeedback: string;
+
   occurrences: RegisteredOccurrence[];
   finalScore: number;
   authorId: string;

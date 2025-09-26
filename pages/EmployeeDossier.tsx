@@ -1,17 +1,29 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useParams, NavLink } from 'react-router-dom';
 import { useData } from '../context/DataContext';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { ArrowRightIcon } from '../components/icons';
+import { ArrowRightIcon, BuildingIcon, LayersIcon, ClipboardListIcon, PlusCircleIcon } from '../components/icons';
+import AtestadoForm from '../components/funcionarios/AtestadoForm';
+import FeedbackDetailModal from '../components/feedback/FeedbackDetailModal';
+import { DetailedFeedback } from '../types';
+
 
 const EmployeeDossier: React.FC = () => {
     const { employeeId } = useParams<{ employeeId: string }>();
-    const { employees, feedbacks: allFeedbacks } = useData();
+    const { user } = useAuth();
+    const { employees, feedbacks: allFeedbacks, sections, sectors, medicalCertificates, addMedicalCertificate } = useData();
+    const [isAtestadoModalOpen, setIsAtestadoModalOpen] = useState(false);
+    const [selectedFeedback, setSelectedFeedback] = useState<DetailedFeedback | null>(null);
 
     const employee = employees.find(e => e.id === employeeId);
     const feedbacks = allFeedbacks.filter(f => f.employeeId === employeeId)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const atestados = medicalCertificates.filter(mc => mc.employeeId === employeeId)
+        .sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime());
+
 
     if (!employee) {
         return (
@@ -42,6 +54,8 @@ const EmployeeDossier: React.FC = () => {
         name: new Date(f.date).toLocaleDateString('pt-BR', {month: 'short', day: 'numeric'}),
         Pontuação: f.finalScore
     })).reverse();
+    
+    const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('pt-BR');
 
 
     return (
@@ -97,6 +111,72 @@ const EmployeeDossier: React.FC = () => {
             </div>
 
             <Card>
+                <h3 className="font-bold text-lg mb-6">Histórico de Cargos</h3>
+                <div className="relative pl-4 border-l-2 border-gray-200">
+                    {(employee.jobHistory && employee.jobHistory.length > 0) ? 
+                        [...employee.jobHistory].reverse().map((job, index, arr) => {
+                            const section = sections.find(s => s.id === job.sectionId);
+                            const sector = section ? sectors.find(s => s.id === section.setor_id) : null;
+                            const isCurrent = !job.endDate;
+                            return (
+                                <div key={index} className={`relative ${index === arr.length - 1 ? '' : 'pb-8'}`}>
+                                    <div className={`absolute -left-[9px] top-1 h-4 w-4 rounded-full ${isCurrent ? 'bg-blue-500 ring-4 ring-blue-100' : 'bg-gray-300'}`}></div>
+                                    <div className="ml-6">
+                                        <div className="flex justify-between items-center">
+                                          <p className={`font-semibold ${isCurrent ? 'text-brand-blue' : 'text-brand-text'}`}>{job.role}</p>
+                                          <span className="text-sm text-brand-text-light">{formatDate(job.startDate)} - {job.endDate ? formatDate(job.endDate) : 'Presente'}</span>
+                                        </div>
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4 mt-1 text-sm text-brand-text-light">
+                                            <span className="flex items-center gap-1.5"><BuildingIcon className="w-4 h-4" /> {sector?.name || 'N/A'}</span>
+                                            <span className="flex items-center gap-1.5"><LayersIcon className="w-4 h-4" /> {section?.name || 'N/A'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        }) 
+                        : (
+                        <p className="text-brand-text-light text-center py-4">Nenhum histórico de cargos encontrado.</p>
+                    )}
+                </div>
+            </Card>
+
+            <Card>
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="font-bold text-lg flex items-center"><ClipboardListIcon className="w-6 h-6 mr-3 text-brand-blue" />Histórico de Atestados</h3>
+                    {(user?.role === 'RH' || user?.role === 'Diretor') && (
+                        <button
+                            onClick={() => setIsAtestadoModalOpen(true)}
+                            className="flex items-center px-4 py-2 bg-brand-blue text-white rounded-lg font-semibold text-sm hover:bg-brand-dark-blue"
+                        >
+                            <PlusCircleIcon className="w-5 h-5 mr-2" />
+                            Adicionar Atestado
+                        </button>
+                    )}
+                </div>
+                <div className="space-y-4">
+                    {atestados.length > 0 ? atestados.map(atestado => (
+                        <div key={atestado.id} className="p-4 rounded-lg border bg-gray-50">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                                <div>
+                                    <p className="font-semibold text-brand-text">{atestado.reason}</p>
+                                    <p className="text-sm text-brand-text-light">
+                                        {formatDate(atestado.startDate)} a {formatDate(atestado.endDate)}
+                                    </p>
+                                </div>
+                                {atestado.cid && (
+                                    <span className="mt-2 sm:mt-0 text-xs font-semibold bg-gray-200 text-brand-text-light px-2 py-1 rounded-full">
+                                        CID: {atestado.cid}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    )) : (
+                        <p className="text-brand-text-light text-center py-4">Nenhum atestado registrado para este funcionário.</p>
+                    )}
+                </div>
+            </Card>
+
+            <Card>
                 <h3 className="font-bold text-lg mb-4">Histórico de Feedbacks</h3>
                 <div className="space-y-4">
                     {feedbacks.length > 0 ? feedbacks.map(f => (
@@ -109,7 +189,7 @@ const EmployeeDossier: React.FC = () => {
                                 <span className={`text-sm font-bold px-2 py-1 rounded ${f.finalScore >= 8 ? 'bg-green-100 text-green-700' : f.finalScore >= 5 ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}>{f.finalScore.toFixed(1)}/10</span>
                             </div>
                             <p className="mt-2 text-sm italic">"{f.qualitative}"</p>
-                             <button className="text-sm text-brand-blue font-semibold mt-2 flex items-center">
+                             <button onClick={() => setSelectedFeedback(f)} className="text-sm text-brand-blue font-semibold mt-2 flex items-center hover:underline">
                                 Ver Detalhes <ArrowRightIcon className="w-4 h-4 ml-1" />
                             </button>
                         </div>
@@ -118,6 +198,28 @@ const EmployeeDossier: React.FC = () => {
                     )}
                 </div>
             </Card>
+
+            {isAtestadoModalOpen && (
+                <AtestadoForm
+                    isOpen={isAtestadoModalOpen}
+                    onClose={() => setIsAtestadoModalOpen(false)}
+                    onSubmit={(data) => {
+                        if(employeeId) {
+                            addMedicalCertificate({ ...data, employeeId });
+                        }
+                        setIsAtestadoModalOpen(false);
+                    }}
+                />
+            )}
+
+            {selectedFeedback && employee && (
+                <FeedbackDetailModal
+                    isOpen={!!selectedFeedback}
+                    onClose={() => setSelectedFeedback(null)}
+                    feedback={selectedFeedback}
+                    employeeName={employee.name}
+                />
+            )}
         </div>
     );
 };

@@ -3,7 +3,7 @@ import Card from '../components/Card';
 import Modal from '../components/Modal';
 import { useData } from '../context/DataContext';
 import { Activity, Occurrence, OccurrenceCategory } from '../types';
-import { PlusCircleIcon, StarIcon, AlertTriangleIcon, EditIcon, TrashIcon } from '../components/icons';
+import { PlusCircleIcon, StarIcon, AlertTriangleIcon, EditIcon, TrashIcon, ChevronDownIcon } from '../components/icons';
 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode; }> = ({ active, onClick, children }) => (
     <button onClick={onClick} className={`px-4 py-2 font-semibold rounded-md ${active ? 'bg-blue-100 text-brand-blue' : 'text-brand-text-light hover:bg-gray-100'}`}>
@@ -113,6 +113,10 @@ const Configuration: React.FC = () => {
       }
   }
 
+  const standardInputClasses = "block w-full px-3 py-2 bg-white border border-brand-gray rounded-md shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
+  const standardSelectClasses = "block w-full appearance-none rounded-md border border-brand-gray bg-white px-3 py-2 pr-8 text-brand-text shadow-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
+
+
   return (
     <div className="space-y-6">
       <div>
@@ -143,17 +147,20 @@ const Configuration: React.FC = () => {
 
         <Modal isOpen={isActivityModalOpen} onClose={() => setActivityModalOpen(false)} title="Nova Atividade">
              <div className="space-y-4">
-                <input type="text" name="name" placeholder="Nome da Atividade" value={newActivity.name} onChange={handleNewActivityChange} className="w-full p-2 border rounded-md"/>
-                <textarea name="description" placeholder="Descrição" value={newActivity.description} onChange={handleNewActivityChange} className="w-full p-2 border rounded-md" rows={3}></textarea>
-                <select name="attribute" value={newActivity.attribute} onChange={handleNewActivityChange} className="w-full p-2 border rounded-md bg-white">
-                    <option value="comunicacao">Comunicação</option>
-                    <option value="iniciativa">Iniciativa</option>
-                    <option value="organizacao">Organização</option>
-                    <option value="trabalho equipe">Trabalho em Equipe</option>
-                </select>
+                <input type="text" name="name" placeholder="Nome da Atividade" value={newActivity.name} onChange={handleNewActivityChange} className={standardInputClasses}/>
+                <textarea name="description" placeholder="Descrição" value={newActivity.description} onChange={handleNewActivityChange} className={standardInputClasses} rows={3}></textarea>
+                <div className="relative">
+                    <select name="attribute" value={newActivity.attribute} onChange={handleNewActivityChange} className={standardSelectClasses}>
+                        <option value="comunicacao">Comunicação</option>
+                        <option value="iniciativa">Iniciativa</option>
+                        <option value="organizacao">Organização</option>
+                        <option value="trabalho equipe">Trabalho em Equipe</option>
+                    </select>
+                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                </div>
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Peso/Importância: {newActivity.weight}</label>
-                    <input type="range" name="weight" min="1" max="10" value={newActivity.weight} onChange={handleNewActivityChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" name="weight" min="1" max="10" value={newActivity.weight} onChange={handleNewActivityChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-blue" />
                 </div>
                  <div className="flex justify-end space-x-2 pt-4">
                     <button onClick={() => setActivityModalOpen(false)} className="px-4 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>
@@ -164,14 +171,17 @@ const Configuration: React.FC = () => {
 
         <Modal isOpen={isOccurrenceModalOpen} onClose={() => setOccurrenceModalOpen(false)} title="Nova Ocorrência">
              <div className="space-y-4">
-                <input type="text" name="name" placeholder="Nome da Ocorrência" value={newOccurrence.name} onChange={handleNewOccurrenceChange} className="w-full p-2 border rounded-md"/>
-                <textarea name="description" placeholder="Descrição" value={newOccurrence.description} onChange={handleNewOccurrenceChange} className="w-full p-2 border rounded-md" rows={3}></textarea>
-                 <select name="category" value={newOccurrence.category} onChange={handleNewOccurrenceChange} className="w-full p-2 border rounded-md bg-white">
-                    {Object.values(OccurrenceCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
-                </select>
+                <input type="text" name="name" placeholder="Nome da Ocorrência" value={newOccurrence.name} onChange={handleNewOccurrenceChange} className={standardInputClasses}/>
+                <textarea name="description" placeholder="Descrição" value={newOccurrence.description} onChange={handleNewOccurrenceChange} className={standardInputClasses} rows={3}></textarea>
+                 <div className="relative">
+                    <select name="category" value={newOccurrence.category} onChange={handleNewOccurrenceChange} className={standardSelectClasses}>
+                        {Object.values(OccurrenceCategory).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                    </select>
+                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"/>
+                 </div>
                  <div>
                     <label className="block text-sm font-medium text-gray-700">Impacto na Pontuação: {newOccurrence.impact}</label>
-                    <input type="range" name="impact" min="-5" max="5" step="0.5" value={newOccurrence.impact} onChange={handleNewOccurrenceChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                    <input type="range" name="impact" min="-5" max="5" step="0.5" value={newOccurrence.impact} onChange={handleNewOccurrenceChange} className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-brand-blue" />
                 </div>
                  <div className="flex justify-end space-x-2 pt-4">
                     <button onClick={() => setOccurrenceModalOpen(false)} className="px-4 py-2 rounded-lg text-brand-text font-semibold hover:bg-gray-100">Cancelar</button>

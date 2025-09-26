@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 type IconProps = React.SVGProps<SVGSVGElement>;
@@ -46,7 +47,7 @@ export const LayersIcon = (props: IconProps) => (
 
 export const SettingsIcon = (props: IconProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.227l1.267-.634a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l.228.008a2.25 2.25 0 01-2.248 2.247l-.008-.228a1.125 1.125 0 00-1.11-1.227l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23L4.99 8.351a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23L2.1 5.379a1.125 1.125 0 001.227-1.11L3.96 3.04a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635zm-2.67-3.64a1.125 1.125 0 01.8-1.558l.807-.403a.5.5 0 01.62.62l-.403.807a1.125 1.125 0 01-1.558.807z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-1.007 1.11-1.227l1.267-.634a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l.228.008a2.25 2.25 0 01-2.248 2.247l-.008-.228a1.125 1.125 0 00-1.11-1.227l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23l.635-1.267a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23L4.99 8.351a1.125 1.125 0 00-1.227-1.11l-1.267.635a1.125 1.125 0 01-1.23-1.23L2.1 5.379a1.125 1.125 0 001.227-1.11L3.96 3.04a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635a1.125 1.125 0 011.23 1.23l-.635 1.267a1.125 1.125 0 001.227 1.11l1.267-.635zm-2.67-3.64a1.125 1.125 0 01.8-1.558l.807-.403a.5.5 0 01.62.62l-.403.807a1.125 1.125 0 01-1.558.807z" />
   </svg>
 );
 
@@ -212,5 +213,40 @@ export const ClockIcon = (props: IconProps) => (
 export const ChevronRightIcon = (props: IconProps) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+    </svg>
+);
+
+export const UploadIcon = (props: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
+export const Loader2Icon = (props: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+  </svg>
+);
+
+export const EyeIcon = (props: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+);
+
+export const UserCheckIcon = (props: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <polyline points="17 11 19 13 23 9" />
+  </svg>
+);
+
+export const ClipboardListIcon = (props: IconProps) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
     </svg>
 );

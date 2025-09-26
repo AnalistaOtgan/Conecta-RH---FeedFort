@@ -10,7 +10,7 @@ interface SecaoCardProps {
   onDelete: (id: string) => void | Promise<void>;
 }
 
-export default function SecaoCard({ secao, setores, onEdit, onDelete }: SecaoCardProps) {
+const SecaoCard: React.FC<SecaoCardProps> = ({ secao, setores, onEdit, onDelete }) => {
   const setor = setores.find(s => s.id === secao.setor_id);
 
   return (
@@ -42,4 +42,6 @@ export default function SecaoCard({ secao, setores, onEdit, onDelete }: SecaoCar
       </div>
     </Card>
   );
-}
+};
+
+export default SecaoCard;

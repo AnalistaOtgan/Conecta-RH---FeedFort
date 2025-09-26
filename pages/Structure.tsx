@@ -6,6 +6,7 @@ import SecaoCard from "../components/estrutura/SecaoCard";
 import SetorForm from "../components/estrutura/SetorForm";
 import SecaoForm from "../components/estrutura/SecaoForm";
 import EstruturaTree from "../components/estrutura/EstruturaTree";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 import { BuildingIcon, LayersIcon, PlusCircleIcon } from '../components/icons';
 
 const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => (
@@ -40,6 +41,10 @@ export default function Estrutura() {
   const [showSecaoForm, setShowSecaoForm] = useState(false);
   const [editingSecao, setEditingSecao] = useState<Section | null>(null);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deletingItem, setDeletingItem] = useState<{ id: string, type: 'setor' | 'secao' } | null>(null);
+
+
   useEffect(() => {
     loadData();
   }, [allSectors, allSections]);
@@ -51,7 +56,6 @@ export default function Estrutura() {
     setIsLoading(false);
   };
 
-  // FIX: Removed unnecessary async keyword as context functions are synchronous.
   const handleSetorSubmit = (setorData: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
     try {
       if (editingSetor) {
@@ -67,7 +71,6 @@ export default function Estrutura() {
     }
   };
 
-  // FIX: Removed unnecessary async keyword as context functions are synchronous.
   const handleSecaoSubmit = (secaoData: Omit<Section, 'id' | 'ativo'>) => {
     try {
       if (editingSecao) {
@@ -83,36 +86,39 @@ export default function Estrutura() {
     }
   };
 
-  // FIX: Removed unnecessary async keyword as context functions are synchronous.
   const handleSetorDelete = (setorId: string) => {
     const secoesDoSetor = secoes.filter(s => s.setor_id === setorId && s.ativo);
-    
     if (secoesDoSetor.length > 0) {
-      alert("Não é possível excluir este setor pois ele possui seções vinculadas.");
+      alert("Não é possível desativar este setor pois ele possui seções ativas vinculadas.");
       return;
     }
-
-    if (window.confirm("Tem certeza que deseja excluir este setor?")) {
-      try {
-        updateSector(setorId, { ativo: false });
-      } catch (error) {
-        console.error("Erro ao excluir setor:", error);
-      }
-    }
+    setDeletingItem({ id: setorId, type: 'setor' });
+    setConfirmOpen(true);
   };
 
-  // FIX: Removed unnecessary async keyword as context functions are synchronous.
   const handleSecaoDelete = (secaoId: string) => {
-    if (window.confirm("Tem certeza que deseja excluir esta seção?")) {
-      try {
-        updateSection(secaoId, { ativo: false });
-      } catch (error) {
-        console.error("Erro ao excluir seção:", error);
+    setDeletingItem({ id: secaoId, type: 'secao' });
+    setConfirmOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (!deletingItem) return;
+
+    try {
+      if (deletingItem.type === 'setor') {
+        updateSector(deletingItem.id, { ativo: false });
+      } else if (deletingItem.type === 'secao') {
+        updateSection(deletingItem.id, { ativo: false });
       }
+    } catch (error) {
+      console.error(`Erro ao desativar ${deletingItem.type}:`, error);
     }
+
+    setConfirmOpen(false);
+    setDeletingItem(null);
   };
 
-  // FIX: Add handlers for edit actions to pass to child components.
+
   const handleSetorEdit = (setor: Sector) => {
     setEditingSetor(setor);
     setShowSetorForm(true);
@@ -323,6 +329,16 @@ export default function Estrutura() {
           }}
         />
       )}
+      
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={confirmDelete}
+        title={`Confirmar Desativação de ${deletingItem?.type === 'setor' ? 'Setor' : 'Seção'}`}
+        description={`Tem certeza que deseja desativar est${deletingItem?.type === 'setor' ? 'e setor' : 'a seção'}? Esta ação pode ser revertida.`}
+      />
+
     </div>
   );
 }

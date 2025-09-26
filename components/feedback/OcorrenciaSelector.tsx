@@ -4,9 +4,9 @@ import { AlertTriangleIcon, CheckCircleIcon, AlertCircleIcon, XCircleIcon } from
 
 // Helper components
 const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ children, ...props }) => <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" {...props}>{children}</label>;
-const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea className={`flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${props.className}`} {...props} />;
+const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea className={`block w-full px-3 py-2 bg-white border border-brand-gray rounded-md shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed min-h-[80px] ${props.className}`} {...props} />;
 const Badge: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>{children}</span>;
-const Checkbox: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input type="checkbox" className={`h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 accent-blue-600 ${props.className}`} {...props} />;
+const Checkbox: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input type="checkbox" className={`h-4 w-4 shrink-0 rounded-sm border border-brand-gray text-brand-blue focus:ring-brand-blue disabled:cursor-not-allowed disabled:opacity-50 ${props.className}`} {...props} />;
 
 
 const categoryConfig = {
