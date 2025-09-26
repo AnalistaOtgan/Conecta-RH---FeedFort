@@ -22,6 +22,15 @@ export interface MedicalCertificate {
   cid?: string;    // CID
 }
 
+export interface Ferias {
+  id: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  periodoAquisitivo: string;
+  observacoes?: string;
+}
+
 export interface Employee {
     id: string;
     // New fields

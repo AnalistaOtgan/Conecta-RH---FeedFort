@@ -1,8 +1,7 @@
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, User, FeedbackData, JobHistoryEntry, MedicalCertificate, Ferias } from '../types';
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { Employee, Activity, Occurrence, OccurrenceCategory, Sector, Section, DetailedFeedback, User, FeedbackData, JobHistoryEntry, MedicalCertificate } from '../types';
-
-// Mock Data
+// Mock Data - Simulates the database
 const sectorsData: Sector[] = [
     { id: 'sec1', name: 'Mercearia', description: 'Setor de produtos secos e embalados.', sections: 2, ativo: true },
     { id: 'sec2', name: 'Hortifruti', description: 'Setor de frutas, verduras e legumes.', sections: 1, ativo: true },
@@ -19,7 +18,7 @@ const sectionsData: Section[] = [
 ];
 
 const employeesData: Employee[] = [
-    { 
+    {
       id: 'user_dir_1',
       name: 'Diretor',
       role: 'Diretor',
@@ -40,7 +39,7 @@ const employeesData: Employee[] = [
           { role: 'Diretor', sectionId: 'sct5', startDate: '2020-01-01'}
       ]
     },
-    { 
+    {
       id: 'user_rh_1',
       name: 'Admin RH',
       role: 'RH',
@@ -61,14 +60,14 @@ const employeesData: Employee[] = [
           { role: 'RH', sectionId: 'sct5', startDate: '2021-06-10'}
       ]
     },
-    { 
-      id: 'user_ldr_1', 
-      name: 'Ana Costa', 
-      role: 'Líder de Loja', 
+    {
+      id: 'user_ldr_1',
+      name: 'Ana Costa',
+      role: 'Líder de Loja',
       sector: 'Gerência',
-      shift: 'Integral', 
-      status: 'Ativo', 
-      initials: 'AC', 
+      shift: 'Integral',
+      status: 'Ativo',
+      initials: 'AC',
       admissionDate: '2022-01-15',
       nome_completo: 'Ana Costa',
       email: 'ana.costa@loja.com',
@@ -82,16 +81,16 @@ const employeesData: Employee[] = [
         { role: 'Líder de Loja', sectionId: 'sct5', startDate: '2022-01-15' }
       ]
     },
-    { 
-      id: 'emp2', 
-      name: 'Bruno Lima', 
-      role: 'Operador de Caixa', 
-      sector: 'Frente de Loja', 
-      shift: 'Tarde', 
-      status: 'Ativo', 
-      initials: 'BL', 
-      admissionDate: '2022-05-20', 
-      leaderId: 'user_ldr_1', 
+    {
+      id: 'emp2',
+      name: 'Bruno Lima',
+      role: 'Operador de Caixa',
+      sector: 'Frente de Loja',
+      shift: 'Tarde',
+      status: 'Ativo',
+      initials: 'BL',
+      admissionDate: '2022-05-20',
+      leaderId: 'user_ldr_1',
       leaderName: 'Ana Costa',
       nome_completo: 'Bruno Lima',
       email: 'bruno.lima@loja.com',
@@ -104,16 +103,16 @@ const employeesData: Employee[] = [
         { role: 'Operador de Caixa', sectionId: 'sct1', startDate: '2022-05-20' }
       ]
     },
-    { 
-      id: 'emp3', 
-      name: 'Carla Dias', 
-      role: 'Repositor', 
-      sector: 'Mercearia', 
-      shift: 'Manhã', 
-      status: 'Ativo', 
-      initials: 'CD', 
-      admissionDate: '2023-02-10', 
-      leaderId: 'user_ldr_1', 
+    {
+      id: 'emp3',
+      name: 'Carla Dias',
+      role: 'Repositor',
+      sector: 'Mercearia',
+      shift: 'Manhã',
+      status: 'Ativo',
+      initials: 'CD',
+      admissionDate: '2023-02-10',
+      leaderId: 'user_ldr_1',
       leaderName: 'Ana Costa',
       nome_completo: 'Carla Dias',
       email: 'carla.dias@loja.com',
@@ -127,16 +126,16 @@ const employeesData: Employee[] = [
         { role: 'Repositor', sectionId: 'sct1', startDate: '2024-01-01' }
       ]
     },
-    { 
-      id: 'emp4', 
-      name: 'Daniel Souza', 
-      role: 'Açougueiro', 
-      sector: 'Açougue', 
-      shift: 'Integral', 
-      status: 'Ativo', 
-      initials: 'DS', 
-      admissionDate: '2021-11-05', 
-      leaderId: 'user_ldr_1', 
+    {
+      id: 'emp4',
+      name: 'Daniel Souza',
+      role: 'Açougueiro',
+      sector: 'Açougue',
+      shift: 'Integral',
+      status: 'Ativo',
+      initials: 'DS',
+      admissionDate: '2021-11-05',
+      leaderId: 'user_ldr_1',
       leaderName: 'Ana Costa',
       nome_completo: 'Daniel Souza',
       email: 'daniel.souza@loja.com',
@@ -149,17 +148,17 @@ const employeesData: Employee[] = [
         { role: 'Açougueiro', sectionId: 'sct4', startDate: '2021-11-05' }
       ]
     },
-    { 
-      id: 'emp5', 
-      name: 'Eduarda Martins', 
-      role: 'Repositor', 
-      sector: 'Hortifruti', 
-      shift: 'Tarde', 
-      status: 'Inativo', 
-      initials: 'EM', 
-      admissionDate: '2022-08-01', 
-      terminationDate: '2024-01-20', 
-      leaderId: 'user_ldr_1', 
+    {
+      id: 'emp5',
+      name: 'Eduarda Martins',
+      role: 'Repositor',
+      sector: 'Hortifruti',
+      shift: 'Tarde',
+      status: 'Inativo',
+      initials: 'EM',
+      admissionDate: '2022-08-01',
+      terminationDate: '2024-01-20',
+      leaderId: 'user_ldr_1',
       leaderName: 'Ana Costa',
       nome_completo: 'Eduarda Martins',
       email: 'eduarda.martins@loja.com',
@@ -201,10 +200,36 @@ const medicalCertificatesData: MedicalCertificate[] = [
     { id: 'mc3', employeeId: 'emp5', startDate: '2023-11-01', endDate: '2023-11-05', reason: 'Gripe', cid: 'J11' },
 ];
 
+const feriasData: Ferias[] = [
+    { id: 'fer1', employeeId: 'emp3', startDate: '2024-01-15', endDate: '2024-02-14', periodoAquisitivo: '2022/2023', observacoes: 'Primeiras férias' },
+    { id: 'fer2', employeeId: 'emp4', startDate: '2023-07-01', endDate: '2023-07-30', periodoAquisitivo: '2021/2022' },
+];
+
+// FIX: Refactored the 'api' object to use async method syntax to resolve parsing and type errors.
+const api = {
+    async get<T>(data: T): Promise<T> {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return data;
+    },
+    async post<T, R>(data: T): Promise<R> {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        // This is a simulation, so we'll just return a mock response
+        return { ...data, id: `new_${Date.now()}` } as unknown as R;
+    },
+    async put<T>(data: T): Promise<T> {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        return data;
+    },
+    async "delete"(): Promise<void> {
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+};
+
+
 type EmployeeInput = Omit<Employee, 'id' | 'initials' | 'terminationDate' | 'name' | 'role' | 'sector' | 'shift' | 'status' | 'leaderId' | 'leaderName' | 'jobHistory'>
 
 interface DataContextType {
-    user: User | null;
+    loading: boolean;
     employees: Employee[];
     activities: Activity[];
     occurrences: Occurrence[];
@@ -212,61 +237,130 @@ interface DataContextType {
     sections: Section[];
     feedbacks: DetailedFeedback[];
     medicalCertificates: MedicalCertificate[];
-    addSector: (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => void;
-    updateSector: (id: string, data: Partial<Omit<Sector, 'id'>>) => void;
-    addSection: (section: Omit<Section, 'id' | 'ativo'>) => void;
-    updateSection: (id: string, data: Partial<Omit<Section, 'id'>>) => void;
-    addActivity: (activity: Omit<Activity, 'id'>) => void;
-    addOccurrence: (occurrence: Omit<Occurrence, 'id'>) => void;
-    addEmployee: (employee: EmployeeInput) => void;
-    updateEmployee: (id: string, data: Partial<EmployeeInput>) => void;
-    bulkAddEmployees: (employees: EmployeeInput[]) => void;
-    addFeedback: (feedbackData: FeedbackData) => void;
-    addMedicalCertificate: (certificate: Omit<MedicalCertificate, 'id'>) => void;
+    ferias: Ferias[];
+    addSector: (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => Promise<void>;
+    updateSector: (id: string, data: Partial<Omit<Sector, 'id'>>) => Promise<void>;
+    addSection: (section: Omit<Section, 'id' | 'ativo'>) => Promise<void>;
+    updateSection: (id: string, data: Partial<Omit<Section, 'id'>>) => Promise<void>;
+    addActivity: (activity: Omit<Activity, 'id'>) => Promise<void>;
+    updateActivity: (id: string, data: Partial<Omit<Activity, 'id'>>) => Promise<void>;
+    deleteActivity: (id: string) => Promise<void>;
+    addOccurrence: (occurrence: Omit<Occurrence, 'id'>) => Promise<void>;
+    updateOccurrence: (id: string, data: Partial<Omit<Occurrence, 'id'>>) => Promise<void>;
+    deleteOccurrence: (id: string) => Promise<void>;
+    addEmployee: (employee: EmployeeInput) => Promise<void>;
+    updateEmployee: (id: string, data: Partial<EmployeeInput>) => Promise<void>;
+    bulkAddEmployees: (employees: EmployeeInput[]) => Promise<void>;
+    addFeedback: (feedbackData: FeedbackData) => Promise<void>;
+    addMedicalCertificate: (certificate: Omit<MedicalCertificate, 'id'>) => Promise<void>;
+    addFerias: (feriasEntry: Omit<Ferias, 'id'>) => Promise<void>;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    const [employees, setEmployees] = useState<Employee[]>(employeesData);
-    const [activities, setActivities] = useState<Activity[]>(activitiesData);
-    const [occurrences, setOccurrences] = useState<Occurrence[]>(occurrencesData);
-    const [sectors, setSectors] = useState<Sector[]>(sectorsData);
-    const [sections, setSections] = useState<Section[]>(sectionsData);
-    const [feedbacks, setFeedbacks] = useState<DetailedFeedback[]>(feedbacksData);
-    const [medicalCertificates, setMedicalCertificates] = useState<MedicalCertificate[]>(medicalCertificatesData);
+    const [loading, setLoading] = useState(true);
+    const [employees, setEmployees] = useState<Employee[]>([]);
+    const [activities, setActivities] = useState<Activity[]>([]);
+    const [occurrences, setOccurrences] = useState<Occurrence[]>([]);
+    const [sectors, setSectors] = useState<Sector[]>([]);
+    const [sections, setSections] = useState<Section[]>([]);
+    const [feedbacks, setFeedbacks] = useState<DetailedFeedback[]>([]);
+    const [medicalCertificates, setMedicalCertificates] = useState<MedicalCertificate[]>([]);
+    const [ferias, setFerias] = useState<Ferias[]>([]);
+    
+    useEffect(() => {
+        const loadInitialData = async () => {
+            setLoading(true);
+            try {
+                const [
+                    employeesRes, activitiesRes, occurrencesRes, sectorsRes, 
+                    sectionsRes, feedbacksRes, medicalCertificatesRes, feriasRes
+                ] = await Promise.all([
+                    api.get(employeesData),
+                    api.get(activitiesData),
+                    api.get(occurrencesData),
+                    api.get(sectorsData),
+                    api.get(sectionsData),
+                    api.get(feedbacksData),
+                    api.get(medicalCertificatesData),
+                    api.get(feriasData),
+                ]);
+                
+                setEmployees(employeesRes);
+                setActivities(activitiesRes);
+                setOccurrences(occurrencesRes);
+                setSectors(sectorsRes);
+                setSections(sectionsRes);
+                setFeedbacks(feedbacksRes);
+                setMedicalCertificates(medicalCertificatesRes);
+                setFerias(feriasRes);
+
+            } catch (error) {
+                console.error("Failed to load initial data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadInitialData();
+    }, []);
 
 
-    const addSector = (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
+    const addSector = async (sector: Omit<Sector, 'id' | 'sections' | 'ativo'>) => {
         const newSector: Sector = { ...sector, id: `sec${Date.now()}`, sections: 0, ativo: true };
+        await api.post(newSector);
         setSectors(prev => [...prev, newSector]);
     };
 
-    const updateSector = (id: string, data: Partial<Omit<Sector, 'id'>>) => {
+    const updateSector = async (id: string, data: Partial<Omit<Sector, 'id'>>) => {
+        await api.put({ id, ...data });
         setSectors(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
     };
 
-    const addSection = (section: Omit<Section, 'id' | 'ativo'>) => {
+    const addSection = async (section: Omit<Section, 'id' | 'ativo'>) => {
         const newSection: Section = { ...section, id: `sct${Date.now()}`, ativo: true };
+        await api.post(newSection);
         setSections(prev => [...prev, newSection]);
         setSectors(prevSectors => prevSectors.map(s => s.id === newSection.setor_id ? { ...s, sections: s.sections + 1 } : s));
     };
     
-    const updateSection = (id: string, data: Partial<Omit<Section, 'id'>>) => {
+    const updateSection = async (id: string, data: Partial<Omit<Section, 'id'>>) => {
+        await api.put({ id, ...data });
         setSections(prev => prev.map(s => s.id === id ? { ...s, ...data } : s));
     };
 
-    const addActivity = (activity: Omit<Activity, 'id'>) => {
+    const addActivity = async (activity: Omit<Activity, 'id'>) => {
         const newActivity: Activity = { ...activity, id: `act${Date.now()}` };
+        await api.post(newActivity);
         setActivities(prev => [...prev, newActivity]);
     };
-    
-    const addOccurrence = (occurrence: Omit<Occurrence, 'id'>) => {
-        const newOccurrence: Occurrence = { ...occurrence, id: `occ${Date.now()}` };
-        setOccurrences(prev => [...prev, newOccurrence]);
+
+    const updateActivity = async (id: string, data: Partial<Omit<Activity, 'id'>>) => {
+        await api.put({ id, ...data });
+        setActivities(prev => prev.map(a => a.id === id ? { ...a, ...data } : a));
+    };
+
+    const deleteActivity = async (id: string) => {
+        await api.delete();
+        setActivities(prev => prev.filter(a => a.id !== id));
     };
     
-// FIX: Explicitly typed the return value to ensure `status` is of type `'Ativo' | 'Inativo'`.
+    const addOccurrence = async (occurrence: Omit<Occurrence, 'id'>) => {
+        const newOccurrence: Occurrence = { ...occurrence, id: `occ${Date.now()}` };
+        await api.post(newOccurrence);
+        setOccurrences(prev => [...prev, newOccurrence]);
+    };
+
+    const updateOccurrence = async (id: string, data: Partial<Omit<Occurrence, 'id'>>) => {
+        await api.put({ id, ...data });
+        setOccurrences(prev => prev.map(o => o.id === id ? { ...o, ...data } : o));
+    };
+
+    const deleteOccurrence = async (id: string) => {
+        await api.delete();
+        setOccurrences(prev => prev.filter(o => o.id !== id));
+    };
+    
     const getCompatibilityFields = (employeeData: Partial<EmployeeInput>): { name: string; role: string; sector: string; shift: string; status: 'Ativo' | 'Inativo' } => {
         const secao = sections.find(s => s.id === employeeData.secao_id);
         const setor = secao ? sectors.find(s => s.id === secao.setor_id) : null;
@@ -282,7 +376,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
     }
 
-    const addEmployee = (employeeData: EmployeeInput) => {
+    const addEmployee = async (employeeData: EmployeeInput) => {
         const initials = employeeData.nome_completo.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
         const admissionDate = new Date().toISOString().split('T')[0];
         const compatibilityFields = getCompatibilityFields(employeeData);
@@ -300,39 +394,39 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
               startDate: admissionDate
             }]
         };
+        await api.post(newEmployee);
         setEmployees(prev => [...prev, newEmployee]);
     };
 
-    const updateEmployee = (id: string, data: Partial<EmployeeInput>) => {
-        setEmployees(prev => prev.map(e => {
-            if (e.id === id) {
-                const updatedEmployee = { ...e, ...data };
-                const compatibilityFields = getCompatibilityFields(updatedEmployee);
+    const updateEmployee = async (id: string, data: Partial<EmployeeInput>) => {
+        const originalEmployee = employees.find(e => e.id === id);
+        if (!originalEmployee) return;
 
-                // Job History Logic
-                if (data.secao_id && data.secao_id !== e.secao_id) {
-                    const today = new Date().toISOString().split('T')[0];
-                    const newHistory: JobHistoryEntry[] = (updatedEmployee.jobHistory || []).map(h => {
-                        if (!h.endDate) {
-                            return { ...h, endDate: today };
-                        }
-                        return h;
-                    });
-                    newHistory.push({
-                        role: compatibilityFields.role,
-                        sectionId: data.secao_id,
-                        startDate: today
-                    });
-                    updatedEmployee.jobHistory = newHistory;
-                }
+        const updatedEmployeeData = { ...originalEmployee, ...data };
+        const compatibilityFields = getCompatibilityFields(updatedEmployeeData);
 
-                return { ...updatedEmployee, ...compatibilityFields };
-            }
-            return e;
-        }));
+        // Job History Logic
+        if (data.secao_id && data.secao_id !== originalEmployee.secao_id) {
+            const today = new Date().toISOString().split('T')[0];
+            const newHistory: JobHistoryEntry[] = (updatedEmployeeData.jobHistory || []).map(h => {
+                if (!h.endDate) return { ...h, endDate: today };
+                return h;
+            });
+            newHistory.push({
+                role: compatibilityFields.role,
+                sectionId: data.secao_id,
+                startDate: today
+            });
+            updatedEmployeeData.jobHistory = newHistory;
+        }
+        
+        const finalUpdatedEmployee = { ...updatedEmployeeData, ...compatibilityFields };
+        
+        await api.put(finalUpdatedEmployee);
+        setEmployees(prev => prev.map(e => e.id === id ? finalUpdatedEmployee : e));
     };
 
-    const bulkAddEmployees = (newEmployeesData: EmployeeInput[]) => {
+    const bulkAddEmployees = async (newEmployeesData: EmployeeInput[]) => {
         const employeesToAdd: Employee[] = newEmployeesData.map((employeeData, index) => {
              const initials = employeeData.nome_completo.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
              const admissionDate = new Date().toISOString().split('T')[0];
@@ -350,10 +444,11 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 }]
              }
         });
+        await api.post(employeesToAdd);
         setEmployees(prev => [...prev, ...employeesToAdd]);
     }
 
-    const addFeedback = (feedbackData: FeedbackData) => {
+    const addFeedback = async (feedbackData: FeedbackData) => {
         const author = employees.find(e => e.id === feedbackData.authorId);
 
         const newDetailedFeedback: DetailedFeedback = {
@@ -383,16 +478,24 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             }),
         };
 
+        await api.post(newDetailedFeedback);
         setFeedbacks(prev => [newDetailedFeedback, ...prev]);
     };
 
-    const addMedicalCertificate = (certificate: Omit<MedicalCertificate, 'id'>) => {
+    const addMedicalCertificate = async (certificate: Omit<MedicalCertificate, 'id'>) => {
         const newCertificate: MedicalCertificate = { ...certificate, id: `mc${Date.now()}` };
+        await api.post(newCertificate);
         setMedicalCertificates(prev => [newCertificate, ...prev].sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
     };
 
+    const addFerias = async (feriasEntry: Omit<Ferias, 'id'>) => {
+        const newFerias: Ferias = { ...feriasEntry, id: `fer${Date.now()}` };
+        await api.post(newFerias);
+        setFerias(prev => [newFerias, ...prev].sort((a,b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()));
+    };
+
     const value = {
-        user: null,
+        loading,
         employees,
         activities,
         occurrences,
@@ -400,17 +503,23 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         sections,
         feedbacks,
         medicalCertificates,
+        ferias,
         addSector,
         updateSector,
         addSection,
         updateSection,
         addActivity,
+        updateActivity,
+        deleteActivity,
         addOccurrence,
+        updateOccurrence,
+        deleteOccurrence,
         addEmployee,
         updateEmployee,
         bulkAddEmployees,
         addFeedback,
-        addMedicalCertificate
+        addMedicalCertificate,
+        addFerias
     };
 
     return <DataContext.Provider value={value}>{children}</DataContext.Provider>;

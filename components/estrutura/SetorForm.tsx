@@ -23,7 +23,7 @@ export default function SetorForm({ setor, onSubmit, onCancel }: SetorFormProps)
     onSubmit({ name, description });
   };
   
-  const standardInputClasses = "block w-full px-3 py-2 bg-white border border-brand-gray rounded-md shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
+  const standardInputClasses = "block w-full px-3 py-2 bg-white border border-brand-gray rounded-lg shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   return (
     <Modal isOpen={true} onClose={onCancel} title={setor ? 'Editar Setor' : 'Novo Setor'}>

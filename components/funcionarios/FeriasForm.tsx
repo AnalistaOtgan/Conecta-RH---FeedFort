@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 import Modal from '../Modal';
 
-interface AtestadoFormProps {
+interface FeriasFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: { startDate: string; endDate: string; reason: string; cid?: string }) => void;
+  onSubmit: (data: { startDate: string; endDate: string; periodoAquisitivo: string; observacoes?: string }) => void;
 }
 
-const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }) => {
+const FeriasForm: React.FC<FeriasFormProps> = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
-    reason: '',
-    cid: '',
+    periodoAquisitivo: '',
+    observacoes: '',
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -22,7 +22,7 @@ const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.reason || !formData.startDate || !formData.endDate) {
+    if (!formData.periodoAquisitivo || !formData.startDate || !formData.endDate) {
       alert('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
@@ -32,7 +32,7 @@ const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }
   const standardInputClasses = "mt-1 block w-full px-3 py-2 bg-white border border-brand-gray rounded-lg shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Adicionar Atestado Médico">
+    <Modal isOpen={isOpen} onClose={onClose} title="Adicionar Período de Férias">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -62,27 +62,27 @@ const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }
           </div>
         </div>
         <div>
-          <label htmlFor="reason" className="block text-sm font-medium text-gray-700">Motivo / Causa</label>
+          <label htmlFor="periodoAquisitivo" className="block text-sm font-medium text-gray-700">Período Aquisitivo</label>
           <input
             type="text"
-            id="reason"
-            name="reason"
-            value={formData.reason}
+            id="periodoAquisitivo"
+            name="periodoAquisitivo"
+            value={formData.periodoAquisitivo}
             onChange={handleChange}
             required
-            placeholder="Ex: Consulta médica, Gripe"
+            placeholder="Ex: 2022/2023"
             className={standardInputClasses}
           />
         </div>
         <div>
-          <label htmlFor="cid" className="block text-sm font-medium text-gray-700">CID (Opcional)</label>
-          <input
-            type="text"
-            id="cid"
-            name="cid"
-            value={formData.cid}
+          <label htmlFor="observacoes" className="block text-sm font-medium text-gray-700">Observações (Opcional)</label>
+          <textarea
+            id="observacoes"
+            name="observacoes"
+            value={formData.observacoes}
             onChange={handleChange}
-            placeholder="Ex: Z00.0"
+            rows={3}
+            placeholder="Alguma observação sobre as férias..."
             className={standardInputClasses}
           />
         </div>
@@ -98,7 +98,7 @@ const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }
             type="submit"
             className="px-4 py-2 rounded-lg bg-brand-blue text-white font-semibold hover:bg-brand-dark-blue"
           >
-            Salvar Atestado
+            Salvar Férias
           </button>
         </div>
       </form>
@@ -106,4 +106,4 @@ const AtestadoForm: React.FC<AtestadoFormProps> = ({ isOpen, onClose, onSubmit }
   );
 };
 
-export default AtestadoForm;
+export default FeriasForm;

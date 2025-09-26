@@ -8,7 +8,7 @@ const CardHeader: React.FC<{children: React.ReactNode, className?: string}> = ({
 const CardTitle: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => <h3 className={`text-lg font-semibold leading-none tracking-tight ${className}`}>{children}</h3>;
 const CardContent: React.FC<{children: React.ReactNode, className?: string}> = ({ children, className }) => <div className={`p-4 pt-0 ${className}`}>{children}</div>;
 const Label: React.FC<React.LabelHTMLAttributes<HTMLLabelElement>> = ({ children, ...props }) => <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" {...props}>{children}</label>;
-const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea className={`block w-full px-3 py-2 bg-white border border-brand-gray rounded-md shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed min-h-[80px] ${props.className}`} {...props} />;
+const Textarea: React.FC<React.TextareaHTMLAttributes<HTMLTextAreaElement>> = (props) => <textarea className={`block w-full px-3 py-2 bg-white border border-brand-gray rounded-lg shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed min-h-[80px] ${props.className}`} {...props} />;
 const Badge: React.FC<{children: React.ReactNode, className?: string}> = ({children, className}) => <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>{children}</span>;
 
 const atributoColors: {[key: string]: string} = {
@@ -134,7 +134,7 @@ export default function AtividadeSelector({ atividades, selectedAtividades, onCh
                       placeholder="Detalhe observações sobre esta atividade..."
                       value={selected.observations || ""}
                       onChange={(e) => handleObservacoesChange(atividade.id, e.target.value)}
-                      className="mt-1 h-20"
+                      className="mt-1"
                     />
                   </div>
                 </CardContent>

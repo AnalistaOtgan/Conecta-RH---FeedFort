@@ -7,7 +7,8 @@ import {
   TrashIcon as Trash2, 
   StarIcon as Star, 
   EyeIcon as Eye,
-  UserCheckIcon
+  UserCheckIcon,
+  KeyIcon
 } from "../icons";
 
 // --- START: Local UI Components ---
@@ -29,10 +30,11 @@ interface FuncionarioCardProps {
   onEdit: (funcionario: Employee) => void;
   onDelete: (id: string) => void;
   onPromote: (id: string) => void;
+  onResetPassword: (id: string) => void;
   currentUser: User;
 }
 
-const FuncionarioCard: React.FC<FuncionarioCardProps> = ({ funcionario, setores, secoes, onEdit, onDelete, onPromote, currentUser }) => {
+const FuncionarioCard: React.FC<FuncionarioCardProps> = ({ funcionario, setores, secoes, onEdit, onDelete, onPromote, onResetPassword, currentUser }) => {
   const navigate = useNavigate();
   
   const secao = secoes.find(s => s.id === funcionario.secao_id);
@@ -114,6 +116,17 @@ const FuncionarioCard: React.FC<FuncionarioCardProps> = ({ funcionario, setores,
               >
                 <UserCheckIcon className={`w-4 h-4 ${funcionario.isUser ? 'text-green-500' : 'text-gray-500'}`} />
               </Button>
+              {funcionario.isUser && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onResetPassword(funcionario.id)}
+                    title="Redefinir Senha"
+                    className="hover:bg-gray-100 p-2 rounded-full"
+                  >
+                    <KeyIcon className="w-4 h-4 text-orange-500" />
+                  </Button>
+              )}
               <Button variant="ghost" size="icon" onClick={() => onDelete(funcionario.id)} title="Desativar" className="hover:bg-gray-100 p-2 rounded-full">
                 <Trash2 className="w-4 h-4 text-red-500" />
               </Button>

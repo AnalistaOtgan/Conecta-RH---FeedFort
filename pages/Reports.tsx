@@ -1,9 +1,8 @@
-
 import React, { useState, useMemo } from 'react';
 import Card from '../components/Card';
 import { useData } from '../context/DataContext';
 import { ChevronDownIcon, DownloadIcon, FilterIcon, FileTextIcon, ArrowRightIcon } from '../components/icons';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, LineChart, Line, CartesianGrid } from 'recharts';
 
 const reportTypes = [
     {
@@ -38,9 +37,12 @@ const reportTypes = [
     }
 ];
 
+// FIX: Define a type for the data context to ensure type safety in child components.
+type DataContextType = ReturnType<typeof useData>;
+
 const Reports: React.FC = () => {
     const dataContext = useData();
-    const { employees, sectors, sections, feedbacks, occurrences } = dataContext;
+    const { employees, sectors, sections, feedbacks, occurrences, activities } = dataContext;
 
     const [filters, setFilters] = useState({
         employeeId: 'all',
@@ -150,6 +152,41 @@ const Reports: React.FC = () => {
                         score: f.finalScore
                     }));
                     break;
+                case 'attribute_evolution':
+                    const attributes = [...new Set(activities.map(a => a.attribute))];
+                    const evolutionMap = new Map();
+
+                    filteredFeedbacks.forEach(f => {
+                        const dateStr = new Date(f.date).toISOString().split('T')[0];
+                        if (!evolutionMap.has(dateStr)) {
+                            const entry: any = { date: new Date(f.date) };
+                            attributes.forEach(attr => {
+                                entry[attr] = { totalScore: 0, totalWeight: 0 };
+                            });
+                            evolutionMap.set(dateStr, entry);
+                        }
+
+                        f.activities.forEach(act => {
+                            const activityInfo = activities.find(a => a.id === act.id);
+                            if (activityInfo) {
+                                const attrEntry = evolutionMap.get(dateStr)[activityInfo.attribute];
+                                attrEntry.totalScore += act.rating * activityInfo.weight;
+                                attrEntry.totalWeight += activityInfo.weight;
+                            }
+                        });
+                    });
+
+                    data = Array.from(evolutionMap.values())
+                        .sort((a, b) => a.date.getTime() - b.date.getTime())
+                        .map(entry => {
+                            const row: any = { date: entry.date.toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' }) };
+                            attributes.forEach(attr => {
+                                const attrData = entry[attr];
+                                row[attr] = attrData.totalWeight > 0 ? parseFloat((attrData.totalScore / attrData.totalWeight).toFixed(2)) : null;
+                            });
+                            return row;
+                        });
+                    break;
                 default:
                     data = [];
             }
@@ -248,7 +285,51 @@ const FilterSelect: React.FC<{ label: string; value: string; onChange: (v: strin
     </div>
 );
 
-const ReportViewer = ({ reportData, filters, dataContext, onBack }: any) => {
+const attributeColors = ['#3B82F6', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899'];
+
+const AttributeEvolutionContent: React.FC<{ data: any[]; attributes: string[] }> = ({ data, attributes }) => (
+    <div className="space-y-6">
+        <h3 className="font-semibold">Evolução de Atributos de Performance</h3>
+        <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+                    <YAxis domain={[0, 10]} tick={{ fontSize: 12 }} />
+                    <Tooltip 
+                        contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            border: '1px solid #E5E7EB', // brand-gray
+                            borderRadius: '0.5rem',
+                            padding: '8px 12px',
+                            boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        }}
+                        labelStyle={{ fontWeight: 'bold', color: '#374151' }}
+                        itemStyle={{ color: '#374151' }}
+                        formatter={(value: number, name: string) => [value.toFixed(2), name]}
+                        labelFormatter={(label: string) => `Data: ${label}`}
+                    />
+                    <Legend />
+                    {attributes.map((attr, index) => (
+                        <Line 
+                            key={attr}
+                            type="monotone" 
+                            dataKey={attr} 
+                            stroke={attributeColors[index % attributeColors.length]} 
+                            strokeWidth={2}
+                            dot={{ r: 4 }}
+                            activeDot={{ r: 6 }}
+                            connectNulls
+                        />
+                    ))}
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
+);
+
+
+const ReportViewer = ({ reportData, filters, dataContext, onBack }: { reportData: any; filters: any; dataContext: DataContextType; onBack: () => void; }) => {
     const { type, data } = reportData;
 
     const renderContent = () => {
@@ -261,6 +342,9 @@ const ReportViewer = ({ reportData, filters, dataContext, onBack }: any) => {
             case 'feedback_frequency': return <FeedbackFrequencyContent data={data} />;
             case 'occurrences_report': return <OccurrencesContent data={data} />;
             case 'qualitative_report': return <QualitativeContent data={data} />;
+            case 'attribute_evolution':
+                const attributes = [...new Set(dataContext.activities.map((a) => a.attribute))];
+                return <AttributeEvolutionContent data={data} attributes={attributes} />;
             default:
                 return (
                     <div className="text-center py-12">

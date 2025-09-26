@@ -6,12 +6,13 @@ import FuncionarioForm from "../components/funcionarios/FuncionarioForm";
 import FuncionarioFilters from "../components/funcionarios/FuncionarioFilters";
 import FuncionarioImporter from "../components/funcionarios/FuncionarioImporter";
 import ConfirmationDialog from "../components/ConfirmationDialog";
+import PasswordResetModal from "../components/funcionarios/PasswordResetModal";
 
 // Shadcn UI like components, but implemented locally for simplicity
 const Card: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => <div className={`bg-white rounded-xl border border-brand-gray shadow-sm ${className}`}>{children}</div>;
 const CardContent: React.FC<{ children: React.ReactNode, className?: string }> = ({ children, className }) => <div className={`p-4 sm:p-6 ${className}`}>{children}</div>;
 const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {variant?: string, size?: string}> = ({ children, className, ...props }) => <button className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 disabled:pointer-events-none disabled:opacity-50 ${className}`} {...props}>{children}</button>;
-const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input className={`block w-full px-3 py-2 bg-white border border-brand-gray rounded-md shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${props.className}`} {...props} />;
+const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = (props) => <input className={`block w-full px-3 py-2 bg-white border border-brand-gray rounded-lg shadow-sm text-brand-text placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-brand-blue focus:border-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${props.className}`} {...props} />;
 
 // Icons from components/icons.tsx - Lucide-React placeholders
 import { UsersIcon as Users, PlusIcon as Plus, SearchIcon as Search, FilterIcon as Filter, UserCheckIcon as UserCheck, UploadIcon as Upload } from "../components/icons";
@@ -43,6 +44,11 @@ export default function Funcionarios() {
 
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [resetModalState, setResetModalState] = useState({
+    isOpen: false,
+    employeeName: '',
+    tempPassword: '',
+  });
 
 
   useEffect(() => {
@@ -55,12 +61,12 @@ export default function Funcionarios() {
     setIsLoading(false);
   };
 
-  const handleSubmit = (funcionarioData) => {
+  const handleSubmit = async (funcionarioData) => {
     try {
       if (editingFuncionario) {
-        updateEmployee(editingFuncionario.id, funcionarioData);
+        await updateEmployee(editingFuncionario.id, funcionarioData);
       } else {
-        addEmployee(funcionarioData);
+        await addEmployee(funcionarioData);
       }
       
       setShowForm(false);
@@ -80,18 +86,41 @@ export default function Funcionarios() {
     setConfirmOpen(true);
   };
 
-  const handlePromote = (funcionarioId: string) => {
+  const handlePromote = async (funcionarioId: string) => {
     try {
-      updateEmployee(funcionarioId, { isUser: true });
+      await updateEmployee(funcionarioId, { isUser: true });
     } catch (error) {
       console.error("Erro ao promover funcionário:", error);
     }
   };
 
-  const confirmDelete = () => {
+  const generateTempPassword = (length = 8) => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789'; // Avoid ambiguous chars
+    let password = '';
+    for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+
+  const handleResetPassword = (funcionarioId: string) => {
+    const funcionario = localFuncionarios.find(f => f.id === funcionarioId);
+    if (funcionario) {
+        const newPassword = generateTempPassword();
+        // In a real app, you would now make an API call to update the user's password.
+        // For this mock, we just show it to the admin.
+        setResetModalState({
+            isOpen: true,
+            employeeName: funcionario.nome_completo,
+            tempPassword: newPassword,
+        });
+    }
+  };
+
+  const confirmDelete = async () => {
     if (deletingId) {
       try {
-        updateEmployee(deletingId, { ativo: false });
+        await updateEmployee(deletingId, { ativo: false });
       } catch (error) {
         console.error("Erro ao desativar funcionário:", error);
       }
@@ -276,6 +305,7 @@ export default function Funcionarios() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               onPromote={handlePromote}
+              onResetPassword={handleResetPassword}
               currentUser={user}
             />
           ))}
@@ -338,6 +368,16 @@ export default function Funcionarios() {
         title="Confirmar Desativação"
         description="Tem certeza que deseja desativar este funcionário? Esta ação pode ser revertida."
       />
+
+      {/* Password Reset Modal */}
+      {resetModalState.isOpen && (
+        <PasswordResetModal
+          isOpen={resetModalState.isOpen}
+          onClose={() => setResetModalState({ isOpen: false, employeeName: '', tempPassword: '' })}
+          employeeName={resetModalState.employeeName}
+          tempPassword={resetModalState.tempPassword}
+        />
+      )}
 
     </div>
   );

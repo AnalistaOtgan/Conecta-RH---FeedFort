@@ -23,7 +23,7 @@ export default function FuncionarioSelector({ funcionarios, selectedId, onChange
           id="funcionario"
           value={selectedId}
           onChange={(e) => onChange(e.target.value)}
-          className={`block w-full appearance-none rounded-md border border-brand-gray bg-white px-3 py-2 pr-8 text-brand-text shadow-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${!selectedId ? 'text-gray-500' : ''}`}
+          className={`block w-full appearance-none rounded-lg border border-brand-gray bg-white px-3 py-2 pr-8 text-brand-text shadow-sm focus:border-brand-blue focus:outline-none focus:ring-1 focus:ring-brand-blue sm:text-sm disabled:bg-gray-100 disabled:cursor-not-allowed ${!selectedId ? 'text-gray-500' : ''}`}
         >
           <option value="" disabled>Selecione um funcionário</option>
           {funcionarios.map((funcionario) => (
